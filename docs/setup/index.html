@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Set Up Glove on Windows — Android Wi-Fi Pairing, iPhone and Files</title>
+  <meta name="description" content="Build Glove on Windows, pair Android with a Wireless debugging QR code or pairing code, verify an iPhone certificate, and transfer files over Wi-Fi.">
+  <link rel="canonical" href="https://arpanjot-coding.github.io/Glove/setup/">
+  <link rel="icon" type="image/svg+xml" href="../assets/glove.svg">
+  <link rel="stylesheet" href="../assets/site.css">
+  <meta name="theme-color" content="#f2f6ff">
+  <meta property="og:site_name" content="Glove">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Set Up Glove on Windows — Android Wi-Fi Pairing, iPhone and Files">
+  <meta property="og:description" content="Build Glove on Windows, pair Android with a Wireless debugging QR code or pairing code, verify an iPhone certificate, and transfer files over Wi-Fi.">
+  <meta property="og:url" content="https://arpanjot-coding.github.io/Glove/setup/">
+  <meta property="og:image" content="https://arpanjot-coding.github.io/Glove/assets/glove-desktop.jpg">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="880">
+  <meta property="og:image:alt" content="Glove interface showing Android and iPhone connection options">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Set Up Glove on Windows — Android Wi-Fi Pairing, iPhone and Files">
+  <meta name="twitter:description" content="Build Glove on Windows, pair Android with a Wireless debugging QR code or pairing code, verify an iPhone certificate, and transfer files over Wi-Fi.">
+  <meta name="twitter:image" content="https://arpanjot-coding.github.io/Glove/assets/glove-desktop.jpg">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="site-head">
+    <div class="shell head-inner">
+      <a class="brand" href="../"><img src="../assets/glove.svg" width="34" height="34" alt="">Glove</a>
+      <nav class="nav" aria-label="Main navigation">
+        <a href="../compatibility/">Compatibility</a>
+        <a href="../setup/" aria-current="page">Setup</a>
+        <a href="../developers/">Developers</a>
+        <a class="github" href="https://github.com/arpanjot-coding/Glove">GitHub</a>
+      </nav>
+    </div>
+  </header>
+  <main id="main">
+    <div class="doc-hero">
+      <div class="shell">
+        <h1>Set up Glove</h1>
+        <p class="lead">Start with the Windows app. Then choose Android mirroring, the iPhone viewing preview, or file sharing.</p>
+      </div>
+    </div>
+    <div class="shell doc-layout">
+      <nav class="toc" aria-label="On this page">
+        <strong>On this page</strong>
+        <a href="#windows">Windows setup</a>
+        <a href="#android">Android QR pairing</a>
+        <a href="#manual">Manual pairing</a>
+        <a href="#iphone">iPhone viewing</a>
+        <a href="#files">File sharing</a>
+        <a href="#troubleshooting">Troubleshooting</a>
+      </nav>
+      <div class="doc-content">
+
+      <section id="windows" aria-labelledby="windows-title">
+        <h2 id="windows-title">Run the Windows development preview</h2>
+        <p>Use a Windows x64 PC with Node.js 24 or newer and Git. Open PowerShell in the folder where you want the source checkout.</p>
+        <pre><code>git clone https://github.com/arpanjot-coding/Glove.git
+cd Glove
+npm ci
+node node_modules/electron/install.js
+npm run dev</code></pre>
+        <p>The Electron app provides Android connections, native file pickers and screen viewing. The browser UI preview shows the interface. The portable package command is <code>npm run package:win</code>. The development package is unsigned and Windows Application Control may restrict its launch. <a href="https://github.com/arpanjot-coding/Glove#readme">Check the repository’s current build and verification notes.</a></p>
+      </section>
+      <section id="android" aria-labelledby="android-title">
+        <h2 id="android-title">Pair Android over Wi-Fi with a QR code</h2>
+        <ol>
+          <li>Download and extract the <a href="https://github.com/Genymobile/scrcpy/blob/master/doc/windows.md">official scrcpy Windows tools</a>. In Glove’s Settings, select the extracted folder containing <code>adb.exe</code> and <code>scrcpy.exe</code>.</li>
+          <li>Connect your phone and PC to the same private Wi-Fi. Check your phone runs Android 11 or newer.</li>
+          <li>Enable Developer options. On Samsung Galaxy, go to <strong>Settings → About phone → Software information → Build number</strong>. On Pixel, open <strong>Settings → About phone → Build number</strong>. Tap Build number seven times and complete the phone’s prompt.</li>
+          <li>In Developer options, enable <strong>Wireless debugging</strong>. Approve the network prompt on your phone if it appears.</li>
+          <li>Open Glove’s Android setup and generate a QR code. On the phone, open <strong>Wireless debugging → Pair device with QR code</strong> and scan the Glove QR. Keep the scanner open until pairing finishes.</li>
+          <li>When Glove lists the authorized device, open its screen. Use the scrcpy window for mouse and keyboard input.</li>
+        </ol>
+        <div class="callout"><p>The Android pairing QR belongs in the <strong>Wireless debugging scanner</strong>. For the separate file sharing link, use the ordinary camera or enter the link in your browser.</p></div>
+        <p><a href="https://developer.android.com/tools/adb#wireless-adb-android-11">Android’s wireless debugging guide.</a> <a href="https://developer.android.com/studio/debug/dev-options">Find Developer options on your phone.</a></p>
+      </section>
+      <section id="manual" aria-labelledby="manual-title">
+        <h2 id="manual-title">Pair and connect manually</h2>
+        <ol>
+          <li>In Wireless debugging, open <strong>Pair device with pairing code</strong>. Enter its IP address, pairing port and code in Glove’s manual pairing form.</li>
+          <li>Return to the main Wireless debugging screen. Read the separate <strong>IP address and port</strong> for connections and enter it in Glove’s connection field.</li>
+          <li>Select the connected device and open its screen. If the connection port changes after a restart or a network change, update it in Glove.</li>
+        </ol>
+        <p>Keep pairing codes private. The temporary pairing port and the device’s connection port serve different steps.</p>
+      </section>
+      <section id="iphone" aria-labelledby="iphone-title">
+        <h2 id="iphone-title">Try iPhone screen viewing</h2>
+        <p>The preview targets Safari on iOS 27 or newer. It displays screen video only and requires your approval on the phone.</p>
+        <ol>
+          <li>Start iPhone setup from Glove’s Screen view. Open the setup link in Safari and download the local certificate profile.</li>
+          <li>Inspect the <strong>downloaded certificate’s SHA-256 fingerprint</strong> and compare it with Glove on your PC before installing or trusting it. Cancel if you cannot inspect it or the fingerprints differ.</li>
+          <li>Install the verified profile, then enable its trust under <strong>Settings → General → About → Certificate Trust Settings</strong>. <a href="https://support.apple.com/en-us/102390">Apple’s certificate trust instructions.</a></li>
+          <li>Open the secure screen link in Safari, choose <strong>Start screen sharing</strong>, and approve the system picker.</li>
+          <li>End sharing when you finish. Remove the local certificate profile when you stop using it.</li>
+        </ol>
+        <p>Glove’s iPhone capture still needs a test on a physical phone. <a href="../compatibility/#iphone">Check model eligibility and Safari requirements.</a></p>
+      </section>
+      <section id="files" aria-labelledby="files-title">
+        <h2 id="files-title">Transfer files with a phone browser</h2>
+        <ol>
+          <li>Open <strong>File sharing</strong> in Glove and choose <strong>Start file sharing</strong>.</li>
+          <li>Scan the session QR with your phone’s camera, or enter the displayed address in its browser.</li>
+          <li>Choose files on your phone to upload to the PC. Glove saves received files in <strong>Downloads → Glove</strong> by default, with a configurable receive folder. Add selected Windows files using Glove’s picker to make them available to the phone.</li>
+          <li>Stop sharing to expire the session link. Received files remain in the receive folder.</li>
+        </ol>
+        <p>File sharing uses unencrypted HTTP on your local network. Share the temporary link only with the intended device and use private Wi-Fi. Each upload can be up to 2 GiB.</p>
+      </section>
+      <section id="troubleshooting" aria-labelledby="troubleshooting-title">
+        <h2 id="troubleshooting-title">Troubleshoot a connection</h2>
+        <details><summary>The phone never appears after I scan the QR</summary><p>Check the phone is on the same Wi-Fi, that Wireless debugging is enabled, and that Glove has the correct tools folder. Guest and managed networks can block mDNS discovery. Try <a href="#manual">manual pairing</a> with the current ports.</p></details>
+        <details><summary>The phone page will not open</summary><p>Keep the file sharing session open on the PC. Choose the local address for the network the phone is using. Check whether the Wi-Fi network or firewall policy allows devices to reach the PC.</p></details>
+        <details><summary>The iPhone preview shows a certificate error</summary><p>Check the actual downloaded certificate against the fingerprint Glove shows. Use the verified profile and secure link for the current Glove installation. Cancel setup if verification fails.</p></details>
+        <details><summary>The PC sees Android but control does not work</summary><p>Confirm the phone is unlocked and authorized. Some firmware or managed-device policies limit input. <a href="https://github.com/Genymobile/scrcpy/blob/master/doc/connection.md">Review scrcpy’s connection requirements.</a></p></details>
+      </section>
+      </div>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="shell foot-inner">
+      <div class="foot-name">
+        <a class="brand" href="../"><img src="../assets/glove.svg" width="34" height="34" alt="">Glove</a>
+        <p>Open source for Windows</p>
+      </div>
+      <nav class="foot-links" aria-label="Project links">
+        <a href="https://github.com/arpanjot-coding/Glove">Source code</a>
+        <a href="https://github.com/arpanjot-coding/Glove/blob/main/LICENSE">MIT license</a>
+        <a href="https://github.com/arpanjot-coding/Glove/issues">Issues</a>
+        <a href="../sitemap.xml">Sitemap</a>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>

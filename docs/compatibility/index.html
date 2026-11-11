@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Glove Phone Compatibility — Samsung Galaxy, Pixel, Android and iPhone</title>
+  <meta name="description" content="Check Glove compatibility for Samsung Galaxy, Google Pixel, OnePlus, Motorola, Xiaomi and iPhone. Find OS, Wireless debugging and local network requirements.">
+  <link rel="canonical" href="https://arpanjot-coding.github.io/Glove/compatibility/">
+  <link rel="icon" type="image/svg+xml" href="../assets/glove.svg">
+  <link rel="stylesheet" href="../assets/site.css">
+  <meta name="theme-color" content="#f2f6ff">
+  <meta property="og:site_name" content="Glove">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Glove Phone Compatibility — Samsung Galaxy, Pixel, Android and iPhone">
+  <meta property="og:description" content="Check Glove compatibility for Samsung Galaxy, Google Pixel, OnePlus, Motorola, Xiaomi and iPhone. Find OS, Wireless debugging and local network requirements.">
+  <meta property="og:url" content="https://arpanjot-coding.github.io/Glove/compatibility/">
+  <meta property="og:image" content="https://arpanjot-coding.github.io/Glove/assets/glove-desktop.jpg">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="880">
+  <meta property="og:image:alt" content="Glove interface showing Android and iPhone connection options">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Glove Phone Compatibility — Samsung Galaxy, Pixel, Android and iPhone">
+  <meta name="twitter:description" content="Check Glove compatibility for Samsung Galaxy, Google Pixel, OnePlus, Motorola, Xiaomi and iPhone. Find OS, Wireless debugging and local network requirements.">
+  <meta name="twitter:image" content="https://arpanjot-coding.github.io/Glove/assets/glove-desktop.jpg">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="site-head">
+    <div class="shell head-inner">
+      <a class="brand" href="../"><img src="../assets/glove.svg" width="34" height="34" alt="">Glove</a>
+      <nav class="nav" aria-label="Main navigation">
+        <a href="../compatibility/" aria-current="page">Compatibility</a>
+        <a href="../setup/">Setup</a>
+        <a href="../developers/">Developers</a>
+        <a class="github" href="https://github.com/arpanjot-coding/Glove">GitHub</a>
+      </nav>
+    </div>
+  </header>
+  <main id="main">
+    <div class="doc-hero">
+      <div class="shell">
+        <h1>Phone compatibility</h1>
+        <p class="lead">Check the operating system and the connection feature you want to use. Model families below help you find the right settings.</p>
+      </div>
+    </div>
+    <div class="shell doc-layout">
+      <nav class="toc" aria-label="On this page">
+        <strong>On this page</strong>
+        <a href="#requirements">Requirements by feature</a>
+        <a href="#android">Android phones and tablets</a>
+        <a href="#iphone">iPhone models</a>
+        <a href="#network">Windows and network</a>
+        <a href="#verify">Verify your device</a>
+      </nav>
+      <div class="doc-content">
+
+      <section id="requirements" aria-labelledby="requirements-title">
+        <h2 id="requirements-title">Requirements by feature</h2>
+        <dl class="device-list">
+          <div><dt>Android mirroring and input</dt><dd>Android 11 or newer with Wireless debugging, plus the official Windows scrcpy tools and a shared local network.</dd></div>
+          <div><dt>iPhone screen viewing preview</dt><dd>Safari on iOS 27 or newer, a verified local certificate, and permission to share the screen. The session is view only.</dd></div>
+          <div><dt>Browser file sharing</dt><dd>Android or iPhone with a browser that can open a local HTTP page, select files and download them.</dd></div>
+          <div><dt>Glove MCP</dt><dd>An authorized Android device visible to ADB and a local stdio MCP client running on the PC.</dd></div>
+        </dl>
+      </section>
+      <section id="android" aria-labelledby="android-title">
+        <h2 id="android-title">Android phones and tablets</h2>
+        <p>Look for <strong>Wireless debugging</strong> in Developer options after updating to Android 11 or newer. The examples below are device families to check. Glove compatibility varies by installed Android version, region, manufacturer firmware, and device policy.</p>
+        <dl class="device-list">
+          <div><dt>Samsung Galaxy S</dt><dd>Galaxy S21, S22, S23, S24 and S25 families, including applicable Plus, Ultra and FE variants.</dd></div>
+          <div><dt>Samsung Galaxy A and M</dt><dd>Examples include Galaxy A14, A25, A26, A35, A54, A55, M33 and M54. Check each model’s installed Android version.</dd></div>
+          <div><dt>Samsung Galaxy Z and Note</dt><dd>Galaxy Z Fold3 and later Fold models, Z Flip3 and later Flip models, and the Galaxy Note20 family on compatible firmware.</dd></div>
+          <div><dt>Google Pixel</dt><dd>Pixel 6, 7, 8, 9 and 10 families, including applicable A, Pro and Fold models.</dd></div>
+          <div><dt>OnePlus</dt><dd>OnePlus 9, 10, 11, 12 and 13 families, supported Nord models, and OnePlus Open.</dd></div>
+          <div><dt>Motorola</dt><dd>Recent Moto G, Edge and Razr models, such as Moto G Power (2024), Edge 50 and Razr 50.</dd></div>
+          <div><dt>Xiaomi, Redmi and POCO</dt><dd>Xiaomi 12 through 15 families, recent Redmi Note models, and POCO F and X series. Check your MIUI or HyperOS Developer options for Wireless debugging.</dd></div>
+          <div><dt>OPPO, realme and vivo</dt><dd>Recent OPPO Find and Reno, realme GT and Number series, and vivo X and V series on compatible Android builds.</dd></div>
+          <div><dt>Nothing and CMF</dt><dd>Nothing Phone (1), Phone (2) and Phone (2a), and CMF Phone models with the required Android version and setting.</dd></div>
+          <div><dt>Other phones and tablets</dt><dd>Check recent Sony Xperia, ASUS Zenfone, Honor, HMD and Nokia phones, plus Android tablets such as Galaxy Tab and Pixel Tablet. Use the same requirements check for a model missing from this list.</dd></div>
+        </dl>
+        <div class="callout"><p><strong>Samsung setup.</strong> Open Settings → About phone → Software information and tap Build number seven times. Return to Settings to open Developer options. <a href="https://developer.android.com/studio/debug/dev-options">Android’s manufacturer-specific settings guide.</a></p></div>
+        <p><a class="text-link" href="../setup/#android">Follow the Android connection guide</a></p>
+      </section>
+      <section id="iphone" aria-labelledby="iphone-title">
+        <h2 id="iphone-title">iPhone screen viewing and file sharing</h2>
+        <p>Glove’s screen viewing preview uses Safari’s screen capture API on iOS 27 or newer. Apple lists iPhone 11 through iPhone 17 families, iPhone Air, iPhone SE (second generation or later), iPhone 18 Pro and iPhone 18 Pro Max, and iPhone Duo among devices eligible for iOS 27. Check your exact model against Apple’s current list. <a href="https://www.apple.com/os/ios/">Apple’s iOS 27 model list.</a> <a href="https://github.com/mdn/browser-compat-data/pull/30732">Safari screen capture compatibility.</a></p>
+        <p>The model list describes iOS eligibility. Physical iPhone testing for Glove’s screen viewing preview is pending. Use Safari, grant screen sharing when prompted, and follow the certificate verification instructions in Glove. Browser file sharing uses a separate connection and can be tried on earlier iOS versions.</p>
+      </section>
+      <section id="network" aria-labelledby="network-title">
+        <h2 id="network-title">Windows and network</h2>
+        <p>Use a Windows x64 PC and connect both devices to a trusted local network that allows them to reach one another. Guest Wi-Fi, managed networks and VPN routing can prevent device discovery or access to the browser link.</p>
+        <p>Android screen control uses the official scrcpy Windows tools, installed separately. Glove’s browser transfer supports phone uploads up to 2 GiB per file. Available space on the PC and browser behavior can affect large transfers. <a href="https://github.com/Genymobile/scrcpy/blob/master/doc/windows.md">Official scrcpy installation instructions.</a></p>
+      </section>
+      <section id="verify" aria-labelledby="verify-title">
+        <h2 id="verify-title">Verify your own phone</h2>
+        <ol>
+          <li>Record your model, Android or iOS version, and Glove version.</li>
+          <li>Connect both devices to your private Wi-Fi and follow the setup for your feature.</li>
+          <li>Try a small test file in both directions. For Android, check that the mirror shows live frames and responds to mouse input. For iPhone, check that frames update after approving Safari’s picker.</li>
+          <li>Report the steps and result with test data, omitting pairing codes, session links and personal screen content.</li>
+        </ol>
+        <p><a class="text-link" href="https://github.com/arpanjot-coding/Glove/issues">Report a compatibility result</a></p>
+      </section>
+      </div>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="shell foot-inner">
+      <div class="foot-name">
+        <a class="brand" href="../"><img src="../assets/glove.svg" width="34" height="34" alt="">Glove</a>
+        <p>Open source for Windows</p>
+      </div>
+      <nav class="foot-links" aria-label="Project links">
+        <a href="https://github.com/arpanjot-coding/Glove">Source code</a>
+        <a href="https://github.com/arpanjot-coding/Glove/blob/main/LICENSE">MIT license</a>
+        <a href="https://github.com/arpanjot-coding/Glove/issues">Issues</a>
+        <a href="../sitemap.xml">Sitemap</a>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>

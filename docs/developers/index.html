@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Glove MCP for Android — Connect Codex, Claude Code and VS Code</title>
+  <meta name="description" content="Connect a local MCP client to an authorized Android test phone over Wi-Fi. Set up Glove MCP for Android screenshots and bounded UI checks.">
+  <link rel="canonical" href="https://arpanjot-coding.github.io/Glove/developers/">
+  <link rel="icon" type="image/svg+xml" href="../assets/glove.svg">
+  <link rel="stylesheet" href="../assets/site.css">
+  <meta name="theme-color" content="#f2f6ff">
+  <meta property="og:site_name" content="Glove">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Glove MCP for Android — Connect Codex, Claude Code and VS Code">
+  <meta property="og:description" content="Connect a local MCP client to an authorized Android test phone over Wi-Fi. Set up Glove MCP for Android screenshots and bounded UI checks.">
+  <meta property="og:url" content="https://arpanjot-coding.github.io/Glove/developers/">
+  <meta property="og:image" content="https://arpanjot-coding.github.io/Glove/assets/glove-desktop.jpg">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="880">
+  <meta property="og:image:alt" content="Glove interface showing Android and iPhone connection options">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Glove MCP for Android — Connect Codex, Claude Code and VS Code">
+  <meta name="twitter:description" content="Connect a local MCP client to an authorized Android test phone over Wi-Fi. Set up Glove MCP for Android screenshots and bounded UI checks.">
+  <meta name="twitter:image" content="https://arpanjot-coding.github.io/Glove/assets/glove-desktop.jpg">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="site-head">
+    <div class="shell head-inner">
+      <a class="brand" href="../"><img src="../assets/glove.svg" width="34" height="34" alt="">Glove</a>
+      <nav class="nav" aria-label="Main navigation">
+        <a href="../compatibility/">Compatibility</a>
+        <a href="../setup/">Setup</a>
+        <a href="../developers/" aria-current="page">Developers</a>
+        <a class="github" href="https://github.com/arpanjot-coding/Glove">GitHub</a>
+      </nav>
+    </div>
+  </header>
+  <main id="main">
+    <div class="doc-hero">
+      <div class="shell">
+        <h1>Use Glove with MCP</h1>
+        <p class="lead">Give a local coding assistant a view of your authorized Android test device over the same wireless connection Glove uses.</p>
+      </div>
+    </div>
+    <div class="shell doc-layout">
+      <nav class="toc" aria-label="On this page">
+        <strong>On this page</strong>
+        <a href="#workflow">Connect your test device</a>
+        <a href="#scope">Tools and permissions</a>
+        <a href="#check">Verify the connection</a>
+      </nav>
+      <div class="doc-content">
+
+      <section id="workflow" aria-labelledby="workflow-title">
+        <h2 id="workflow-title">Connect your test device</h2>
+        <ol>
+          <li>Pair the device in Glove using Android’s Wireless debugging settings and confirm it appears as connected.</li>
+          <li>Install the dependencies from the Glove checkout. In Glove, open <strong>Settings → Developer tools</strong>, select the connected device, and copy the configuration for Codex or Claude Code. Other stdio clients can use the server command from the repository guide.</li>
+          <li>Open your client’s MCP tool list and choose the intended device before requesting a screenshot or running a UI check.</li>
+        </ol>
+        <p>The repository guide includes the exact setup commands for Codex, Claude Code, VS Code and other stdio clients. <a href="https://github.com/arpanjot-coding/Glove/blob/main/docs/MCP.md">Read the Glove MCP setup guide.</a></p>
+        <p>The Glove Mobile QA skill gives assistants a repeatable flow for selecting a device, capturing a screen and reporting the result. <a href="https://github.com/arpanjot-coding/Glove/blob/main/skills/glove-mobile-qa/SKILL.md">Open the Glove Mobile QA skill.</a></p>
+      </section>
+      <section id="scope" aria-labelledby="scope-title">
+        <h2 id="scope-title">Tools and permissions</h2>
+        <dl class="device-list">
+          <div><dt>Discover devices</dt><dd>List Android devices already authorized in ADB.</dd></div>
+          <div><dt>Capture the screen</dt><dd>Request a screenshot from a selected test device.</dd></div>
+          <div><dt>Opt in to input</dt><dd>Enable the basic UI actions in the MCP guide when a test needs them. Keep inspection read only for screenshot tasks.</dd></div>
+        </dl>
+        <p>The server runs on the Windows PC over standard input and output. Phone pairing and authorization happen through Android and Glove. iPhone viewing uses the separate Glove screen viewer.</p>
+        <div class="callout"><p>Screenshots can contain personal information. Use a test phone or a clean test screen and check your MCP client’s settings before sending an image to its model provider.</p></div>
+      </section>
+      <section id="check" aria-labelledby="check-title">
+        <h2 id="check-title">Verify the connection</h2>
+        <p>Try a small test with a clearly identifiable app screen and review the screenshot in the client.</p>
+        <pre><code>List the authorized Android devices. Take a screenshot of my
+selected test device while the demo app is open. Describe the
+visible screen and confirm the expected heading is present.</code></pre>
+        <p>If the device is missing, check it remains connected in Glove and that the MCP server uses the same ADB installation. Reconnect the client after editing its MCP configuration. <a href="../setup/#android">Review Android pairing.</a></p>
+      </section>
+      </div>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="shell foot-inner">
+      <div class="foot-name">
+        <a class="brand" href="../"><img src="../assets/glove.svg" width="34" height="34" alt="">Glove</a>
+        <p>Open source for Windows</p>
+      </div>
+      <nav class="foot-links" aria-label="Project links">
+        <a href="https://github.com/arpanjot-coding/Glove">Source code</a>
+        <a href="https://github.com/arpanjot-coding/Glove/blob/main/LICENSE">MIT license</a>
+        <a href="https://github.com/arpanjot-coding/Glove/issues">Issues</a>
+        <a href="../sitemap.xml">Sitemap</a>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>

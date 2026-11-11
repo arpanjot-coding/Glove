@@ -1,0 +1,42 @@
+GLOVE FOR WINDOWS — 0.1.0
+
+Extract the complete Windows archive into a folder. Open Glove.exe.
+Keep all its DLLs, resources and license notices together.
+This is an unsigned development build for Windows x64.
+The Windows app opened on the development PC. This preview still needs
+physical phone testing.
+
+ANDROID
+In Settings, open the official tools guide, download/extract scrcpy, and choose
+its folder containing adb.exe and scrcpy.exe. Follow Glove's guided setup.
+Android 11+ supports Wi-Fi pairing without USB, but Wireless debugging and
+Developer options are required. Scan the Android QR using the QR scanner in
+Wireless debugging, not your ordinary camera. mDNS must be allowed on the LAN.
+Use the manual fallback if your network blocks discovery.
+
+DEVELOPER TESTING
+In Settings > Developer tools, select an authorized Android device and copy
+the configuration for your local MCP client. It requires Node.js 24 or newer.
+See MCP.md and resources\glove-mobile-qa\SKILL.md for the test workflow.
+
+IPHONE
+Screen viewing targets Safari on iOS 27+. Start iPhone setup, scan its QR and
+follow the certificate instructions. Compare the actual downloaded certificate's
+SHA-256 fingerprint with the PC before installing or trusting it. Cancel if you
+cannot verify it. This build views screen video only, without remote touch/audio.
+Physical iPhone compatibility still needs testing.
+
+FILES
+Start file sharing and scan its QR with either phone's normal camera. Add PC
+files or upload from the phone page. Received files default to Downloads\Glove.
+Use trusted private Wi-Fi: file transfers use unencrypted HTTP. Stop sharing
+when finished. Links are session-specific. Received files remain on your PC.
+
+LICENSE
+Original Glove application code: MIT, Copyright 2026 Glove contributors.
+Third-party dependencies keep their own licenses. Read LICENSE.glove.txt,
+THIRD-PARTY-NOTICES.txt and Electron/Chromium notices in this folder.
+
+Both devices must use the same private network. Guest Wi-Fi, VPNs, Windows
+Firewall and disabled mDNS can block connections. See docs/VERIFICATION.md in
+the source for Android emulator results and remaining phone checks.
