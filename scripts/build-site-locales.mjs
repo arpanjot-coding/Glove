@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: MIT
+import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const docs = fileURLToPath(new URL('../docs/', import.meta.url));
+const css = await readFile(join(docs, 'assets/site.css'), 'utf8');
+const cssVersion = createHash('sha256').update(css.replaceAll('\r\n', '\n')).digest('hex').slice(0, 12);
 const base = 'https://arpanjot-coding.github.io/Glove/';
 const repository = 'https://github.com/arpanjot-coding/Glove';
 const socialImage = base + 'assets/glove-social.jpg';
@@ -103,7 +106,7 @@ function localizedPage(locale) {
   <link rel="canonical" href="${url}">
 ${alternates}
   <link rel="icon" type="image/svg+xml" href="../assets/glove.svg">
-  <link rel="stylesheet" href="../assets/site.css">
+  <link rel="stylesheet" href="../assets/site.css?v=${cssVersion}">
   <meta name="theme-color" content="#f8faff">
   <meta property="og:site_name" content="Glove">
   <meta property="og:type" content="website">
@@ -227,11 +230,15 @@ async function readSite(relative) {
   return readFile(join(docs, relative), 'utf8').then(contents => contents.replaceAll('\r\n', '\n'));
 }
 
-const home = replaceRegion(await readSite('index.html'), 'GLOVE ALTERNATES', alternates);
+function withCurrentStyles(source) {
+  return source.replace(/href="((?:\.\.\/)?assets\/site\.css)(?:\?v=[a-f0-9]+)?"/, (_match, path) => `href="${path}?v=${cssVersion}"`);
+}
+
+const home = replaceRegion(withCurrentStyles(await readSite('index.html')), 'GLOVE ALTERNATES', alternates);
 const files = [['index.html', replaceRegion(home, 'GLOVE LANGUAGES', picker({ current: english.lang, label: english.languageMenu, prefix: './' }))]];
 for (const guide of guides) {
   const path = `${guide}/index.html`;
-  files.push([path, replaceRegion(await readSite(path), 'GLOVE LANGUAGES', picker({ label: english.languageMenu, prefix: '../' }))]);
+  files.push([path, replaceRegion(withCurrentStyles(await readSite(path)), 'GLOVE LANGUAGES', picker({ label: english.languageMenu, prefix: '../' }))]);
 }
 for (const locale of locales) files.push([`${locale.slug}/index.html`, localizedPage(locale)]);
 files.push(['sitemap.xml', sitemap()]);
