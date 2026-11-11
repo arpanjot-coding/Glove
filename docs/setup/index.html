@@ -14,14 +14,15 @@
   <meta property="og:title" content="Set Up Glove on Windows — Android Wi-Fi Pairing, iPhone and Files">
   <meta property="og:description" content="Build Glove on Windows, pair Android with a Wireless debugging QR code or pairing code, verify an iPhone certificate, and transfer files over Wi-Fi.">
   <meta property="og:url" content="https://arpanjot-coding.github.io/Glove/setup/">
-  <meta property="og:image" content="https://arpanjot-coding.github.io/Glove/assets/glove-desktop.jpg">
-  <meta property="og:image:width" content="1280">
-  <meta property="og:image:height" content="880">
-  <meta property="og:image:alt" content="Glove interface showing Android and iPhone connection options">
+  <meta property="og:image" content="https://arpanjot-coding.github.io/Glove/assets/glove-social.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Glove product artwork showing a Windows PC and phone">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Set Up Glove on Windows — Android Wi-Fi Pairing, iPhone and Files">
   <meta name="twitter:description" content="Build Glove on Windows, pair Android with a Wireless debugging QR code or pairing code, verify an iPhone certificate, and transfer files over Wi-Fi.">
-  <meta name="twitter:image" content="https://arpanjot-coding.github.io/Glove/assets/glove-desktop.jpg">
+  <meta name="twitter:image" content="https://arpanjot-coding.github.io/Glove/assets/glove-social.jpg">
+  <meta name="twitter:image:alt" content="Glove product artwork showing a Windows PC and phone">
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -29,6 +30,7 @@
     <div class="shell head-inner">
       <a class="brand" href="../"><img src="../assets/glove.svg" width="34" height="34" alt="">Glove</a>
       <nav class="nav" aria-label="Main navigation">
+        <a href="../demos/">Demos</a>
         <a href="../compatibility/">Compatibility</a>
         <a href="../setup/" aria-current="page">Setup</a>
         <a href="../developers/">Developers</a>
@@ -63,7 +65,7 @@ cd Glove
 npm ci
 node node_modules/electron/install.js
 npm run dev</code></pre>
-        <p>The Electron app provides Android connections, native file pickers and screen viewing. The browser UI preview shows the interface. The portable package command is <code>npm run package:win</code>. The development package is unsigned and Windows Application Control may restrict its launch. <a href="https://github.com/arpanjot-coding/Glove#readme">Check the repository’s current build and verification notes.</a></p>
+        <p>The portable package command is <code>npm run package:win</code>. The unsigned development package opened on the Windows test PC. Your PC’s application policy determines whether it can run. <a href="https://github.com/arpanjot-coding/Glove#readme">Check the build and verification notes.</a></p>
       </section>
       <section id="android" aria-labelledby="android-title">
         <h2 id="android-title">Pair Android over Wi-Fi with a QR code</h2>
@@ -77,6 +79,13 @@ npm run dev</code></pre>
         </ol>
         <div class="callout"><p>The Android pairing QR belongs in the <strong>Wireless debugging scanner</strong>. For the separate file sharing link, use the ordinary camera or enter the link in your browser.</p></div>
         <p><a href="https://developer.android.com/tools/adb#wireless-adb-android-11">Android’s wireless debugging guide.</a> <a href="https://developer.android.com/studio/debug/dev-options">Find Developer options on your phone.</a></p>
+        <details class="guide-screen">
+          <summary>See the Android setup screen</summary>
+          <figure>
+            <img src="../assets/glove-android.webp" width="1281" height="881" loading="lazy" decoding="async" alt="Glove on Windows showing the Samsung Galaxy guide to enable Developer options and Wireless debugging">
+            <figcaption>Glove’s Android setup guide for Samsung Galaxy.</figcaption>
+          </figure>
+        </details>
       </section>
       <section id="manual" aria-labelledby="manual-title">
         <h2 id="manual-title">Pair and connect manually</h2>
@@ -89,15 +98,22 @@ npm run dev</code></pre>
       </section>
       <section id="iphone" aria-labelledby="iphone-title">
         <h2 id="iphone-title">Try iPhone screen viewing</h2>
-        <p>The preview targets Safari on iOS 27 or newer. It displays screen video only and requires your approval on the phone.</p>
+        <p>This experimental flow requires a compatible Safari screen picker and your approval on the phone. The initial test target is iOS 27 or newer. The intended session shows screen video only, and physical playback testing is pending.</p>
         <ol>
           <li>Start iPhone setup from Glove’s Screen view. Open the setup link in Safari and download the local certificate profile.</li>
           <li>Inspect the <strong>downloaded certificate’s SHA-256 fingerprint</strong> and compare it with Glove on your PC before installing or trusting it. Cancel if you cannot inspect it or the fingerprints differ.</li>
           <li>Install the verified profile, then enable its trust under <strong>Settings → General → About → Certificate Trust Settings</strong>. <a href="https://support.apple.com/en-us/102390">Apple’s certificate trust instructions.</a></li>
-          <li>Open the secure screen link in Safari, choose <strong>Start screen sharing</strong>, and approve the system picker.</li>
+          <li>Open the secure screen link in Safari and choose <strong>Start screen sharing</strong>. Continue if Safari offers a screen picker and you want to share the selected screen.</li>
           <li>End sharing when you finish. Remove the local certificate profile when you stop using it.</li>
         </ol>
-        <p>Glove’s iPhone capture still needs a test on a physical phone. <a href="../compatibility/#iphone">Check model eligibility and Safari requirements.</a></p>
+        <p><a href="../compatibility/#iphone">Check iPhone requirements.</a></p>
+        <details class="guide-screen">
+          <summary>See the iPhone setup screen</summary>
+          <figure>
+            <img src="../assets/glove-iphone.webp" width="1281" height="881" loading="lazy" decoding="async" alt="Glove on Windows showing the iPhone screen-viewing setup and local certificate instructions">
+            <figcaption>The Windows setup screen for the iPhone viewing experiment.</figcaption>
+          </figure>
+        </details>
       </section>
       <section id="files" aria-labelledby="files-title">
         <h2 id="files-title">Transfer files with a phone browser</h2>
@@ -108,6 +124,13 @@ npm run dev</code></pre>
           <li>Stop sharing to expire the session link. Received files remain in the receive folder.</li>
         </ol>
         <p>File sharing uses unencrypted HTTP on your local network. Share the temporary link only with the intended device and use private Wi-Fi. Each upload can be up to 2 GiB.</p>
+        <details class="guide-screen">
+          <summary>See the file sharing screen</summary>
+          <figure>
+            <img src="../assets/glove-files.webp" width="1281" height="881" loading="lazy" decoding="async" alt="Glove on Windows showing file sharing before a session is started">
+            <figcaption>File sharing before a session starts.</figcaption>
+          </figure>
+        </details>
       </section>
       <section id="troubleshooting" aria-labelledby="troubleshooting-title">
         <h2 id="troubleshooting-title">Troubleshoot a connection</h2>

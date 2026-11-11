@@ -1,65 +1,81 @@
-# Glove
+<p align="center">
+  <a href="https://arpanjot-coding.github.io/Glove/">
+    <img src="docs/assets/glove-social.jpg" width="100%" alt="Glove product artwork showing a laptop and phone connected wirelessly">
+  </a>
+</p>
 
-**Connect your Android phone or iPhone to your Windows PC over Wi-Fi.**
+<h1 align="center">Glove</h1>
 
-Glove brings wireless Android screen control, browser file sharing and experimental iPhone screen viewing into one desktop app. The optional local MCP server gives coding agents a way to inspect an Android test device and navigate its UI.
+<p align="center"><strong>Wireless Android screen control, phone file sharing, and mobile QA on Windows.</strong></p>
 
-[Website](https://arpanjot-coding.github.io/Glove/) · [Phone compatibility](https://arpanjot-coding.github.io/Glove/compatibility/) · [Setup guide](https://arpanjot-coding.github.io/Glove/setup/) · [MCP documentation](docs/MCP.md)
+<p align="center">
+  <a href="https://arpanjot-coding.github.io/Glove/">Website</a> ·
+  <a href="https://arpanjot-coding.github.io/Glove/demos/">Watch the demos</a> ·
+  <a href="https://arpanjot-coding.github.io/Glove/setup/">Setup guide</a> ·
+  <a href="https://arpanjot-coding.github.io/Glove/compatibility/">Compatibility</a> ·
+  <a href="docs/MCP.md">Developer MCP</a>
+</p>
 
-![Glove’s Windows interface preview](docs/assets/glove-desktop.jpg)
+Glove is an open-source Windows x64 preview. Mirror and control an Android phone over Wi-Fi, move files between a phone browser and your PC, or let a coding agent inspect an authorized Android test device.
 
-## What Glove does
+## A look inside Glove
 
-- **Android screen control.** Pair with a QR code from Wireless debugging and open the phone in a scrcpy window. Android 11 or newer and the official scrcpy Windows tools are required. Glove also supports an already connected Android emulator for development.
-- **File sharing.** Open a Glove link in the phone’s browser and transfer files in either direction. Incoming files go to your chosen receive folder. Uploads are streamed to disk and limited to 2 GiB per file.
-- **iPhone screen viewing.** Safari on iOS 27 or newer can share a screen through the experimental local HTTPS viewing flow. The desktop app displays video. This flow still needs physical iPhone verification.
-- **Developer testing.** Connect Codex, Claude Code, VS Code or a compatible local stdio MCP client. Select one authorized Android device for PNG screenshots. Enable input explicitly to tap, swipe and press Back.
+<img src="docs/assets/glove-app.webp" width="100%" alt="Glove's Devices page in the Windows app with Android and iPhone connection options">
 
-## Try it on Windows
+*The Windows desktop app, ready to connect a phone.*
 
-Glove is a Windows x64 development preview. The portable package is unsigned. Check the [verification notes](docs/VERIFICATION.md) for the test PC’s launch result and current device coverage.
+<details>
+<summary>See Android setup and file sharing</summary>
 
-1. Extract the full portable package and open **Glove.exe**.
-2. For Android, download and extract the official [scrcpy Windows tools](https://github.com/Genymobile/scrcpy/blob/master/doc/windows.md). In **Settings → Android screen tools**, choose the folder containing `adb.exe` and `scrcpy.exe`.
-3. In **Screen view → Android**, follow the Developer options guide. Samsung Galaxy, Google Pixel and other Android models have separate instructions.
-4. On the phone, open **Developer options → Wireless debugging → Pair device with QR code**. Use that scanner with Glove’s pairing code. If network discovery fails, use the manual pairing address and the separate connection address shown on the phone.
-5. For files, choose **File sharing → Start sharing**. Open its QR code with the phone’s ordinary camera. Stop the session when you finish.
+<img src="docs/assets/glove-android.webp" width="49%" alt="Glove's Android Developer options guide with Samsung Galaxy instructions">
+<img src="docs/assets/glove-files.webp" width="49%" alt="Glove's file sharing page with controls to start a transfer session">
 
-Keep the PC and phone on the same private network. Guest networks and VPNs may block local discovery. File links use unencrypted local HTTP and grant access to the files in that session. [Android Wireless debugging documentation](https://developer.android.com/tools/adb#wireless-adb-android-11)
+</details>
 
-## iPhone setup
+## What you can do
 
-Start the iPhone setup flow in **Screen view**. Open the setup link on the iPhone. Compare the SHA-256 fingerprint of the **actual certificate in the downloaded profile** with the fingerprint shown on your PC before installing or trusting it. If you cannot inspect the fingerprint or it differs, cancel setup.
+- **Mirror and control Android over Wi-Fi.** Pair by QR from Android's Wireless debugging screen, then open the phone in scrcpy. Wireless pairing requires Android 11+ and separately installed scrcpy Windows tools. An authorized Android emulator also works for testing.
+- **Send files in either direction.** Open a Glove link in the Android or iPhone browser. Uploads stream to your selected receive folder. Each file can be up to 2 GiB.
+- **Try iPhone screen viewing.** The experimental HTTPS session targets Safari on iOS 27+ and needs a compatible system screen picker. Physical iPhone playback is still unverified. The session is view-only.
+- **Test an Android app with an agent.** The local MCP server captures PNG screenshots from one selected test device. Enable input to tap, swipe, and press Back. [MCP guide](docs/MCP.md)
 
-After trusting the matching certificate, open Glove’s HTTPS screen page in Safari and use the system screen picker. Stop sharing when done. Remove the certificate profile when you no longer use it. File sharing works independently of screen capture. [Apple certificate trust instructions](https://support.apple.com/en-us/102390) · [Safari screen capture compatibility](https://github.com/mdn/browser-compat-data/blob/main/api/MediaDevices.json)
+## Watch the demos
 
-## Test a mobile app with an agent
+- **Screen mirroring.** Watch scrcpy record the Android 16 emulator at 864 × 1920. This demo used local emulator ADB transport. [Video](https://arpanjot-coding.github.io/Glove/demos/#screen-mirroring)
+- **Agent-driven QA.** Compare before and after screenshots from a real MCP screenshot → tap → screenshot run. [MCP demo](https://arpanjot-coding.github.io/Glove/demos/#developer-testing)
+- **File transfer.** A test fixture uploaded and downloaded 8,388,645 bytes per direction. File sizes and SHA-256 hashes matched. [Transfer results](https://arpanjot-coding.github.io/Glove/demos/#file-sharing)
 
-In **Settings → Developer tools**, refresh the device list, choose the authorized test device and copy the configuration for your MCP client. Run the client on the Windows PC that hosts ADB. The local MCP server needs Node.js 24 or newer.
+See the [verification notes](docs/VERIFICATION.md) for test conditions and physical-device coverage.
 
-The [MCP guide](docs/MCP.md) covers Codex, Claude Code, VS Code and enabling basic input. The [Glove mobile QA skill](skills/glove-mobile-qa/SKILL.md) gives an agent a short workflow for device selection, screenshot-based navigation, recovery cases and evidence. Install the skill in your client’s project skills folder or give the file to the agent directly.
+## Get started on Windows
 
-## Build from source
-
-Use Node.js 24+ on Windows.
+Build the preview from source with Node.js 24+ on Windows x64. The portable build is unsigned.
 
 ```powershell
+git clone https://github.com/arpanjot-coding/Glove.git
+cd Glove
 npm ci
 node node_modules/electron/install.js
 npm run build
 npm start
 ```
 
-`npm run dev` runs the development shell. `npm run dev:ui` opens a renderer preview. `npm test` checks Android device discovery and pairing state, file transfers, iPhone signaling and the MCP protocol. `npm run package:win` builds the portable folder at `release/Glove-win32-x64`.
+**Android.** In **Settings → Android screen tools**, choose the extracted [scrcpy Windows tools](https://github.com/Genymobile/scrcpy/blob/master/doc/windows.md). Open **Screen view → Android** for step-by-step instructions to turn on Developer options and Wireless debugging. Use the QR scanner inside **Wireless debugging → Pair device with QR code**. Manual pairing is available when local discovery fails.
 
-The desktop shell lives in `src/desktop` and the UI in `src/ui`. Local file sharing and iPhone signaling live in `src/sharing` and `src/viewing`. The standalone developer server lives in `src/mcp`. The product site lives in `docs` and publishes through GitHub Pages.
+**Files.** In **File sharing**, start a session and scan its QR with your phone's camera. Keep both devices on the same trusted private network. The file link grants access to that session over local HTTP. Stop sharing when you finish.
 
-## Compatibility and reports
+**iPhone screen preview.** Follow the setup guide to verify the downloaded certificate fingerprint before trusting the certificate. Remove the certificate profile when you no longer use it. File sharing works independently of screen viewing. [iPhone setup](https://arpanjot-coding.github.io/Glove/setup/#iphone)
 
-Check the [compatibility guide](https://arpanjot-coding.github.io/Glove/compatibility/) for requirements and examples from Samsung Galaxy, Google Pixel, OnePlus, Motorola, Xiaomi and other families. Glove’s Wi-Fi Android support depends on the installed OS, Wireless debugging availability and device policy.
+## Mobile testing with Codex, Claude Code, or VS Code
 
-For a bug report, include the Windows version, Glove build, phone model and OS, connection type, exact steps and expected result. Share a screenshot from a test account or redact personal details. See [verification notes](docs/VERIFICATION.md) for measured performance and what was exercised on the emulator.
+Choose an authorized test device in **Settings → Developer tools** and copy the configuration for your local MCP client. Run that client on the Windows PC hosting ADB. The [Glove mobile QA skill](skills/glove-mobile-qa/SKILL.md) gives the agent a workflow for checking the device, taking screenshots, navigating with optional input, and collecting evidence. [Developer guide](https://arpanjot-coding.github.io/Glove/developers/)
+
+## Compatibility and support
+
+The [compatibility guide](https://arpanjot-coding.github.io/Glove/compatibility/) covers Samsung Galaxy, Google Pixel, OnePlus, Motorola, Xiaomi, and other phone families. Wireless debugging availability depends on the Android version, model, and device policy. See the guide for tested configurations and platform requirements.
+
+Run `npm test` to check pairing, local transfers, iPhone signaling, and the MCP protocol. Use `npm run dev` for the development shell or `npm run package:win` to build the unsigned portable folder at `release/Glove-win32-x64`. [Report an issue](https://github.com/arpanjot-coding/Glove/issues/new)
 
 ## License
 
-Glove’s original source and its mobile QA skill are available under [MIT](LICENSE). Electron, Chromium, the Fluent icons and other dependencies retain their own licenses. See [third-party notices](THIRD-PARTY-NOTICES.txt). Glove’s Windows app uses a separate installation of scrcpy for Android screen control.
+Glove's original source and mobile QA skill use the [MIT License](LICENSE). Dependencies retain their own licenses. Glove uses a separate installation of scrcpy for Android screen control. [Third-party notices](THIRD-PARTY-NOTICES.txt)

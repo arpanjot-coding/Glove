@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Glove Demos — Android Screen Mirror, MCP and File Transfers</title>
+  <meta name="description" content="Watch an Android screen mirrored with Glove and scrcpy, compare real MCP screenshots before and after a tap, and see byte-exact file transfer checks.">
+  <link rel="canonical" href="https://arpanjot-coding.github.io/Glove/demos/">
+  <link rel="icon" type="image/svg+xml" href="../assets/glove.svg">
+  <link rel="stylesheet" href="../assets/site.css">
+  <meta name="theme-color" content="#f4f7fd">
+  <meta property="og:site_name" content="Glove">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Glove Demos — Android Screen Mirror, MCP and File Transfers">
+  <meta property="og:description" content="Watch the scrcpy mirror, compare real MCP screenshots, and see the Android emulator file transfer checks.">
+  <meta property="og:url" content="https://arpanjot-coding.github.io/Glove/demos/">
+  <meta property="og:image" content="https://arpanjot-coding.github.io/Glove/assets/glove-social.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Glove product artwork showing a Windows PC and phone">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Glove Demos — Android Screen Mirror, MCP and File Transfers">
+  <meta name="twitter:description" content="Watch the scrcpy mirror, compare real MCP screenshots, and see the Android emulator file transfer checks.">
+  <meta name="twitter:image" content="https://arpanjot-coding.github.io/Glove/assets/glove-social.jpg">
+  <meta name="twitter:image:alt" content="Glove product artwork showing a Windows PC and phone">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="site-head">
+    <div class="shell head-inner">
+      <a class="brand" href="../"><img src="../assets/glove.svg" width="34" height="34" alt="">Glove</a>
+      <nav class="nav" aria-label="Main navigation">
+        <a href="./" aria-current="page">Demos</a>
+        <a href="../compatibility/">Compatibility</a>
+        <a href="../setup/">Setup</a>
+        <a href="../developers/">Developers</a>
+        <a class="github" href="https://github.com/arpanjot-coding/Glove">GitHub</a>
+      </nav>
+    </div>
+  </header>
+  <main id="main">
+    <div class="doc-hero">
+      <div class="shell">
+        <h1>See Glove in action</h1>
+        <p class="lead">Watch a real Android emulator mirror, see a tap sent by an MCP client, and check what reached the other end of a file transfer.</p>
+        <nav class="demo-nav" aria-label="Demos on this page">
+          <a href="#screen-mirroring">Android mirror</a>
+          <a href="#developer-testing">MCP screenshots</a>
+          <a href="#file-sharing">File transfers</a>
+          <a href="#coverage">Test coverage</a>
+        </nav>
+      </div>
+    </div>
+    <div class="shell demo-body">
+      <section id="screen-mirroring" class="mirror-demo" aria-labelledby="mirror-title">
+        <div>
+          <div class="demo-heading">
+            <h2 id="mirror-title">Android screen mirroring</h2>
+            <p>Play a 3.2-second recording of a test app mirrored with scrcpy. The test used Android 16 on an emulator connected through local ADB.</p>
+          </div>
+          <dl class="demo-details">
+            <div><dt>Device</dt><dd>Android 16 emulator, API 36</dd></div>
+            <div><dt>Mirror</dt><dd>scrcpy 5.0.1</dd></div>
+            <div><dt>Video</dt><dd>864 × 1920 H.264, 126 frames</dd></div>
+          </dl>
+          <a class="text-link" href="../setup/#android">Set up mirroring on your phone</a>
+        </div>
+        <figure class="mirror-panel">
+          <video controls preload="none" playsinline width="864" height="1920" poster="../qa/emulator-scrcpy-poster.webp" aria-label="Silent scrcpy recording of the Glove test app on an Android emulator">
+            <source src="../qa/emulator-scrcpy.mp4" type="video/mp4">
+            <p><a href="../qa/emulator-scrcpy.mp4">Open the Android mirror video</a>.</p>
+          </video>
+          <figcaption>Recorded emulator screen · Silent video · <a href="../qa/emulator-scrcpy.mp4">Open MP4</a></figcaption>
+        </figure>
+      </section>
+      <section id="developer-testing" aria-labelledby="mcp-title">
+        <div class="demo-heading">
+          <h2 id="mcp-title">MCP screenshot, tap and recheck</h2>
+          <p>A local MCP client captured the test app, sent one tap, and captured the screen again. The test app changed colour and its tap counter moved from zero to one.</p>
+        </div>
+        <div class="mcp-frames">
+          <figure>
+            <a href="../qa/emulator-mcp-before.png" aria-label="Open the full-resolution screenshot before the tap"><img src="../qa/emulator-mcp-before.png" width="1080" height="2400" loading="lazy" decoding="async" alt="Android emulator test app with a tap count of zero"></a>
+            <figcaption><strong>Before the tap</strong>Tap count 0</figcaption>
+          </figure>
+          <figure>
+            <a href="../qa/emulator-mcp-after.png" aria-label="Open the full-resolution screenshot after the tap"><img src="../qa/emulator-mcp-after.png" width="1080" height="2400" loading="lazy" decoding="async" alt="Android emulator test app after one tap, with a changed background and a tap count of one"></a>
+            <figcaption><strong>After the tap</strong>Tap count 1</figcaption>
+          </figure>
+        </div>
+        <p class="section-link"><a class="text-link" href="../developers/">Connect Glove to your MCP client</a></p>
+      </section>
+      <section id="file-sharing" aria-labelledby="files-title">
+        <div class="demo-heading">
+          <h2 id="files-title">Byte-exact file transfers</h2>
+          <p>An Android test fixture uploaded and downloaded separate files through Glove’s file sharing service. The saved byte counts and SHA-256 digests matched the source data in both directions.</p>
+        </div>
+        <dl class="transfer-proof">
+          <div><dt>Windows → Android</dt><dd class="proof-number">8,388,645 bytes</dd><dd>SHA-256 matched after download.</dd></div>
+          <div><dt>Android → Windows</dt><dd class="proof-number">8,388,645 bytes</dd><dd>SHA-256 matched after upload.</dd></div>
+        </dl>
+        <p class="section-link"><a class="text-link" href="../setup/#files">Share a test file with your phone</a></p>
+      </section>
+      <section id="coverage" aria-labelledby="coverage-title">
+        <div class="demo-heading"><h2 id="coverage-title">Test coverage</h2></div>
+        <div class="demo-footer">
+          <p>The emulator run verified Android capture, input and file transfer. The Windows development preview also opened on the test PC. Pairing by scanning a QR code and iPhone screen capture in Safari still need physical phone checks.</p>
+          <a class="text-link" href="https://github.com/arpanjot-coding/Glove/blob/main/docs/VERIFICATION.md">Read the complete verification notes</a>
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="shell foot-inner">
+      <div class="foot-name">
+        <a class="brand" href="../"><img src="../assets/glove.svg" width="34" height="34" alt="">Glove</a>
+        <p>Open source for Windows</p>
+      </div>
+      <nav class="foot-links" aria-label="Project links">
+        <a href="https://github.com/arpanjot-coding/Glove">Source code</a>
+        <a href="https://github.com/arpanjot-coding/Glove/blob/main/LICENSE">MIT license</a>
+        <a href="https://github.com/arpanjot-coding/Glove/issues">Issues</a>
+        <a href="../sitemap.xml">Sitemap</a>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>

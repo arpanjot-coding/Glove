@@ -14,14 +14,15 @@
   <meta property="og:title" content="Glove MCP for Android — Connect Codex, Claude Code and VS Code">
   <meta property="og:description" content="Connect a local MCP client to an authorized Android test phone over Wi-Fi. Set up Glove MCP for Android screenshots and bounded UI checks.">
   <meta property="og:url" content="https://arpanjot-coding.github.io/Glove/developers/">
-  <meta property="og:image" content="https://arpanjot-coding.github.io/Glove/assets/glove-desktop.jpg">
-  <meta property="og:image:width" content="1280">
-  <meta property="og:image:height" content="880">
-  <meta property="og:image:alt" content="Glove interface showing Android and iPhone connection options">
+  <meta property="og:image" content="https://arpanjot-coding.github.io/Glove/assets/glove-social.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Glove product artwork showing a Windows PC and phone">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Glove MCP for Android — Connect Codex, Claude Code and VS Code">
   <meta name="twitter:description" content="Connect a local MCP client to an authorized Android test phone over Wi-Fi. Set up Glove MCP for Android screenshots and bounded UI checks.">
-  <meta name="twitter:image" content="https://arpanjot-coding.github.io/Glove/assets/glove-desktop.jpg">
+  <meta name="twitter:image" content="https://arpanjot-coding.github.io/Glove/assets/glove-social.jpg">
+  <meta name="twitter:image:alt" content="Glove product artwork showing a Windows PC and phone">
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -29,6 +30,7 @@
     <div class="shell head-inner">
       <a class="brand" href="../"><img src="../assets/glove.svg" width="34" height="34" alt="">Glove</a>
       <nav class="nav" aria-label="Main navigation">
+        <a href="../demos/">Demos</a>
         <a href="../compatibility/">Compatibility</a>
         <a href="../setup/">Setup</a>
         <a href="../developers/" aria-current="page">Developers</a>
@@ -56,7 +58,7 @@
         <h2 id="workflow-title">Connect your test device</h2>
         <ol>
           <li>Pair the device in Glove using Android’s Wireless debugging settings and confirm it appears as connected.</li>
-          <li>Install the dependencies from the Glove checkout. In Glove, open <strong>Settings → Developer tools</strong>, select the connected device, and copy the configuration for Codex or Claude Code. Other stdio clients can use the server command from the repository guide.</li>
+          <li>Install Node.js 24 or newer. In Glove, open <strong>Settings → Developer tools</strong>, select the connected device, and copy the configuration for Codex or Claude Code. Other stdio clients can use the server command from the repository guide.</li>
           <li>Open your client’s MCP tool list and choose the intended device before requesting a screenshot or running a UI check.</li>
         </ol>
         <p>The repository guide includes the exact setup commands for Codex, Claude Code, VS Code and other stdio clients. <a href="https://github.com/arpanjot-coding/Glove/blob/main/docs/MCP.md">Read the Glove MCP setup guide.</a></p>
@@ -79,6 +81,7 @@
 selected test device while the demo app is open. Describe the
 visible screen and confirm the expected heading is present.</code></pre>
         <p>If the device is missing, check it remains connected in Glove and that the MCP server uses the same ADB installation. Reconnect the client after editing its MCP configuration. <a href="../setup/#android">Review Android pairing.</a></p>
+        <p class="section-link"><a class="text-link" href="../demos/#developer-testing">See the screenshots before and after an MCP tap</a></p>
       </section>
       </div>
     </div>

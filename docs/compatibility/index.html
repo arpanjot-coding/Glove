@@ -14,14 +14,15 @@
   <meta property="og:title" content="Glove Phone Compatibility — Samsung Galaxy, Pixel, Android and iPhone">
   <meta property="og:description" content="Check Glove compatibility for Samsung Galaxy, Google Pixel, OnePlus, Motorola, Xiaomi and iPhone. Find OS, Wireless debugging and local network requirements.">
   <meta property="og:url" content="https://arpanjot-coding.github.io/Glove/compatibility/">
-  <meta property="og:image" content="https://arpanjot-coding.github.io/Glove/assets/glove-desktop.jpg">
-  <meta property="og:image:width" content="1280">
-  <meta property="og:image:height" content="880">
-  <meta property="og:image:alt" content="Glove interface showing Android and iPhone connection options">
+  <meta property="og:image" content="https://arpanjot-coding.github.io/Glove/assets/glove-social.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Glove product artwork showing a Windows PC and phone">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Glove Phone Compatibility — Samsung Galaxy, Pixel, Android and iPhone">
   <meta name="twitter:description" content="Check Glove compatibility for Samsung Galaxy, Google Pixel, OnePlus, Motorola, Xiaomi and iPhone. Find OS, Wireless debugging and local network requirements.">
-  <meta name="twitter:image" content="https://arpanjot-coding.github.io/Glove/assets/glove-desktop.jpg">
+  <meta name="twitter:image" content="https://arpanjot-coding.github.io/Glove/assets/glove-social.jpg">
+  <meta name="twitter:image:alt" content="Glove product artwork showing a Windows PC and phone">
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -29,6 +30,7 @@
     <div class="shell head-inner">
       <a class="brand" href="../"><img src="../assets/glove.svg" width="34" height="34" alt="">Glove</a>
       <nav class="nav" aria-label="Main navigation">
+        <a href="../demos/">Demos</a>
         <a href="../compatibility/" aria-current="page">Compatibility</a>
         <a href="../setup/">Setup</a>
         <a href="../developers/">Developers</a>
@@ -58,7 +60,7 @@
         <h2 id="requirements-title">Requirements by feature</h2>
         <dl class="device-list">
           <div><dt>Android mirroring and input</dt><dd>Android 11 or newer with Wireless debugging, plus the official Windows scrcpy tools and a shared local network.</dd></div>
-          <div><dt>iPhone screen viewing preview</dt><dd>Safari on iOS 27 or newer, a verified local certificate, and permission to share the screen. The session is view only.</dd></div>
+          <div><dt>Experimental iPhone screen viewing</dt><dd>A compatible Safari screen picker, a verified local certificate, and permission to share the screen. The initial test target is iOS 27 or newer.</dd></div>
           <div><dt>Browser file sharing</dt><dd>Android or iPhone with a browser that can open a local HTTP page, select files and download them.</dd></div>
           <div><dt>Glove MCP</dt><dd>An authorized Android device visible to ADB and a local stdio MCP client running on the PC.</dd></div>
         </dl>
@@ -83,8 +85,8 @@
       </section>
       <section id="iphone" aria-labelledby="iphone-title">
         <h2 id="iphone-title">iPhone screen viewing and file sharing</h2>
-        <p>Glove’s screen viewing preview uses Safari’s screen capture API on iOS 27 or newer. Apple lists iPhone 11 through iPhone 17 families, iPhone Air, iPhone SE (second generation or later), iPhone 18 Pro and iPhone 18 Pro Max, and iPhone Duo among devices eligible for iOS 27. Check your exact model against Apple’s current list. <a href="https://www.apple.com/os/ios/">Apple’s iOS 27 model list.</a> <a href="https://github.com/mdn/browser-compat-data/pull/30732">Safari screen capture compatibility.</a></p>
-        <p>The model list describes iOS eligibility. Physical iPhone testing for Glove’s screen viewing preview is pending. Use Safari, grant screen sharing when prompted, and follow the certificate verification instructions in Glove. Browser file sharing uses a separate connection and can be tried on earlier iOS versions.</p>
+        <p>Glove’s experimental viewing flow requires Safari to offer a compatible screen picker. The initial test target is iOS 27 or newer, and physical iPhone playback testing is pending. Follow the certificate verification instructions in Glove before approving screen sharing.</p>
+        <p>For OS eligibility, Apple lists the iPhone 11 through iPhone 17 families, iPhone Air, iPhone SE (second generation or later), iPhone 18 Pro, iPhone 18 Pro Max and iPhone Duo among iOS 27 models. Check your exact model against Apple’s list. Browser file sharing uses a separate connection and can be tried on earlier iOS versions. <a href="https://www.apple.com/os/ios/">Apple’s iOS 27 model list.</a></p>
       </section>
       <section id="network" aria-labelledby="network-title">
         <h2 id="network-title">Windows and network</h2>
