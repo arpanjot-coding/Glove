@@ -326,7 +326,7 @@ details p { color: var(--muted); margin-top: 8px; }
   .language-picker + .nav { flex-wrap: wrap; justify-content: flex-end; row-gap: 0; }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 800px) {
   .head-inner { flex-wrap: wrap; gap: 2px 17px; padding-block: 12px 9px; }
   .head-inner .language-picker { margin-inline-start: auto; }
   .language-picker[open] .language-options { inset-inline-start: auto; inset-inline-end: 0; }
