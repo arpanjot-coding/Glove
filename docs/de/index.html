@@ -22,7 +22,7 @@
   <link rel="alternate" hreflang="zh-Hans" href="https://arpanjot-coding.github.io/Glove/zh/">
   <link rel="icon" type="image/svg+xml" href="../assets/glove.svg">
   <link rel="stylesheet" href="../assets/site.css">
-  <meta name="theme-color" content="#10213b">
+  <meta name="theme-color" content="#f8faff">
   <meta property="og:site_name" content="Glove">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Glove für Windows – Dateien und Android-Benachrichtigungen">
@@ -52,7 +52,7 @@
   "image": "https://arpanjot-coding.github.io/Glove/assets/glove-social.jpg"
 }</script>
 </head>
-<body class="localized-home">
+<body class="home-page localized-home">
   <a class="skip" href="#main">Zum Inhalt springen</a>
   <header class="site-head">
     <div class="shell head-inner">
@@ -75,8 +75,8 @@
         </nav>
       </details>
       <nav class="nav">
-        <a href="#features">Verbinde dein Smartphone</a>
-        <a href="#getting-started">Glove einrichten</a>
+        <a href="#features">Funktionen</a>
+        <a href="#getting-started">Einrichtung</a>
         <a class="github" href="https://github.com/arpanjot-coding/Glove" hreflang="en">GitHub</a>
       </nav>
     </div>
@@ -93,8 +93,8 @@
           </div>
           <p class="hero-note">Kostenlose Vorschau für Windows x64 · MIT-Lizenz</p>
         </div>
-        <figure class="product-art">
-          <img src="../assets/glove-product.webp" width="1600" height="800" alt="Illustration eines Windows-Laptops und eines Smartphones" fetchpriority="high">
+        <figure class="hero-window" aria-label="Glove unter Windows">
+          <img class="hero-window-image" src="../assets/glove-app.webp" width="1281" height="881" alt="Windows-Oberfläche von Glove mit Optionen für Android-Benachrichtigungen und Dateiübertragung" fetchpriority="high">
         </figure>
       </div>
     </section>
@@ -106,39 +106,38 @@
         <article class="feature"><h3>Android am PC steuern und testen</h3><p>Im Bereich Developer kannst du den Bildschirm eines autorisierten Android-Geräts per WLAN spiegeln und steuern. Installiere dafür die offiziellen scrcpy-Werkzeuge separat und aktiviere drahtloses Debugging. Mit lokalem MCP kannst du Bildschirmfotos erfassen und Eingaben testen.</p></article>
       </div>
     </section>
-    <section class="section section-tinted" aria-labelledby="app-title">
-      <div class="shell localized-shot">
-        <div class="section-heading"><h2 id="app-title">Glove unter Windows</h2></div>
-        <figure class="app-screenshot">
-          <img src="../assets/glove-app.webp" width="1281" height="881" loading="lazy" decoding="async" alt="Windows-Oberfläche von Glove mit Optionen für Android-Benachrichtigungen und Dateiübertragung">
-        </figure>
-      </div>
-    </section>
-    <section class="section shell" id="getting-started" aria-labelledby="setup-title">
-      <div class="localized-prose">
-        <h2 id="setup-title">Die Windows-Vorschau aus dem Quellcode starten</h2>
-        <p class="lead">Der öffentliche Quellcode steht unter der MIT-Lizenz. So startest du die Vorschau auf einem Windows-x64-PC.</p>
-        <ol class="localized-steps">
+    <section class="section section-tinted" id="getting-started" aria-labelledby="setup-title">
+      <div class="shell localized-setup-grid">
+        <div class="localized-prose">
+          <h2 id="setup-title">Die Windows-Vorschau aus dem Quellcode starten</h2>
+          <p class="lead">Der öffentliche Quellcode steht unter der MIT-Lizenz. So startest du die Vorschau auf einem Windows-x64-PC.</p>
+          <ol class="localized-steps">
           <li>Installiere Git und Node.js 24 oder neuer auf deinem PC.</li>
           <li>Klone das Glove-Repository und installiere die Abhängigkeiten.</li>
           <li>Starte Glove und verbinde dein Smartphone im selben privaten WLAN.</li>
-        </ol>
+          </ol>
+          <a class="text-link" href="../setup/#windows" hreflang="en" aria-describedby="english-guides">Anleitung öffnen</a>
+          <p class="quiet" id="english-guides">Die ausführliche Anleitung und die Demos sind auf Englisch.</p>
+        </div>
         <pre class="setup-commands" dir="ltr" tabindex="0" aria-label="PowerShell"><code>git clone https://github.com/arpanjot-coding/Glove.git
 cd Glove
 npm ci
 node node_modules/electron/install.js
 npm run build
 npm start</code></pre>
-        <a class="text-link" href="../setup/#windows" hreflang="en" aria-describedby="english-guides">Anleitung öffnen</a>
-        <p class="quiet" id="english-guides">Die ausführliche Anleitung und die Demos sind auf Englisch.</p>
       </div>
     </section>
     <section class="section night" aria-labelledby="status-title">
-      <div class="shell"><div class="localized-prose">
-        <h2 id="status-title">Stand der Vorschau</h2>
-        <p class="lead">Die Bildschirmansicht für das iPhone ist experimentell. Sie setzt eine kompatible Bildschirmfreigabe in Safari voraus und wird für iOS 27 oder neuer erprobt. Die QR-Kopplung auf einem echten Android-Gerät und die iPhone-Bildschirmübertragung müssen noch auf den Geräten geprüft werden.</p>
-        <div class="actions"><a class="button" href="https://github.com/arpanjot-coding/Glove" hreflang="en">Quellcode auf GitHub ansehen</a></div>
-      </div></div>
+      <div class="shell release-grid">
+        <div class="localized-prose">
+          <h2 id="status-title">Stand der Vorschau</h2>
+          <p class="lead">Die Bildschirmansicht für das iPhone ist experimentell. Sie setzt eine kompatible Bildschirmfreigabe in Safari voraus und wird für iOS 27 oder neuer erprobt. Die QR-Kopplung auf einem echten Android-Gerät und die iPhone-Bildschirmübertragung müssen noch auf den Geräten geprüft werden.</p>
+          <div class="actions"><a class="button" href="https://github.com/arpanjot-coding/Glove" hreflang="en">Quellcode auf GitHub ansehen</a></div>
+        </div>
+        <figure class="product-art">
+          <img src="../assets/glove-product.webp" width="1600" height="800" alt="Illustration eines Windows-Laptops und eines Smartphones" loading="lazy" decoding="async">
+        </figure>
+      </div>
     </section>
   </main>
   <footer class="site-footer">

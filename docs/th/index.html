@@ -22,7 +22,7 @@
   <link rel="alternate" hreflang="zh-Hans" href="https://arpanjot-coding.github.io/Glove/zh/">
   <link rel="icon" type="image/svg+xml" href="../assets/glove.svg">
   <link rel="stylesheet" href="../assets/site.css">
-  <meta name="theme-color" content="#10213b">
+  <meta name="theme-color" content="#f8faff">
   <meta property="og:site_name" content="Glove">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Glove สำหรับ Windows | โอนไฟล์และตอบการแจ้งเตือน Android">
@@ -52,7 +52,7 @@
   "image": "https://arpanjot-coding.github.io/Glove/assets/glove-social.jpg"
 }</script>
 </head>
-<body class="localized-home">
+<body class="home-page localized-home">
   <a class="skip" href="#main">ข้ามไปยังเนื้อหา</a>
   <header class="site-head">
     <div class="shell head-inner">
@@ -75,8 +75,8 @@
         </nav>
       </details>
       <nav class="nav">
-        <a href="#features">ใช้ Glove ทำอะไรได้บ้าง</a>
-        <a href="#getting-started">ดูวิธีตั้งค่า</a>
+        <a href="#features">ฟีเจอร์</a>
+        <a href="#getting-started">การตั้งค่า</a>
         <a class="github" href="https://github.com/arpanjot-coding/Glove" hreflang="en">GitHub</a>
       </nav>
     </div>
@@ -93,8 +93,8 @@
           </div>
           <p class="hero-note">รุ่นทดลองฟรีและโอเพนซอร์สสำหรับ Windows x64 · MIT</p>
         </div>
-        <figure class="product-art">
-          <img src="../assets/glove-product.webp" width="1600" height="800" alt="ภาพประกอบพีซี Windows กับโทรศัพท์ที่เชื่อมต่อแบบไร้สาย" fetchpriority="high">
+        <figure class="hero-window" aria-label="หน้าตา Glove บน Windows">
+          <img class="hero-window-image" src="../assets/glove-app.webp" width="1281" height="881" alt="หน้าต่าง Glove บน Windows แสดงตัวเลือกการโอนไฟล์และการแจ้งเตือน Android" fetchpriority="high">
         </figure>
       </div>
     </section>
@@ -106,39 +106,38 @@
         <article class="feature"><h3>เครื่องมือสำหรับนักพัฒนา Android</h3><p>ในพื้นที่สำหรับนักพัฒนา คุณสามารถแสดงและควบคุมหน้าจอ Android ผ่านการแก้ไขข้อบกพร่องแบบไร้สายและ scrcpy ทางการที่ติดตั้งแยกต่างหาก ใช้ MCP ในเครื่องเพื่อทดสอบอุปกรณ์ Android ที่อนุญาตแล้วได้</p></article>
       </div>
     </section>
-    <section class="section section-tinted" aria-labelledby="app-title">
-      <div class="shell localized-shot">
-        <div class="section-heading"><h2 id="app-title">หน้าตา Glove บน Windows</h2></div>
-        <figure class="app-screenshot">
-          <img src="../assets/glove-app.webp" width="1281" height="881" loading="lazy" decoding="async" alt="หน้าต่าง Glove บน Windows แสดงตัวเลือกการโอนไฟล์และการแจ้งเตือน Android">
-        </figure>
-      </div>
-    </section>
-    <section class="section shell" id="getting-started" aria-labelledby="setup-title">
-      <div class="localized-prose">
-        <h2 id="setup-title">ตั้งค่า Glove บน Windows</h2>
-        <p class="lead">ซอร์สโค้ดเผยแพร่บน GitHub หากต้องการเรียกใช้รุ่นทดลอง ให้ใช้ Windows x64 ที่ติดตั้ง Git และ Node.js 24 ขึ้นไป</p>
-        <ol class="localized-steps">
+    <section class="section section-tinted" id="getting-started" aria-labelledby="setup-title">
+      <div class="shell localized-setup-grid">
+        <div class="localized-prose">
+          <h2 id="setup-title">ตั้งค่า Glove บน Windows</h2>
+          <p class="lead">ซอร์สโค้ดเผยแพร่บน GitHub หากต้องการเรียกใช้รุ่นทดลอง ให้ใช้ Windows x64 ที่ติดตั้ง Git และ Node.js 24 ขึ้นไป</p>
+          <ol class="localized-steps">
           <li>โคลนที่เก็บโค้ด Glove จาก GitHub แล้วเปิดโฟลเดอร์นั้นใน PowerShell</li>
           <li>ใช้ npm ci เพื่อติดตั้งแพ็กเกจที่จำเป็น จากนั้นใช้ node node_modules/electron/install.js เพื่อติดตั้ง Electron</li>
           <li>ใช้ npm run build เพื่อสร้างแอป แล้วใช้ npm start เพื่อเปิดแอป</li>
-        </ol>
+          </ol>
+          <a class="text-link" href="../setup/#windows" hreflang="en" aria-describedby="english-guides">คู่มือตั้งค่า (ภาษาอังกฤษ)</a>
+          <p class="quiet" id="english-guides">คู่มือตั้งค่าโดยละเอียดและวิดีโอสาธิตเป็นภาษาอังกฤษ</p>
+        </div>
         <pre class="setup-commands" dir="ltr" tabindex="0" aria-label="PowerShell"><code>git clone https://github.com/arpanjot-coding/Glove.git
 cd Glove
 npm ci
 node node_modules/electron/install.js
 npm run build
 npm start</code></pre>
-        <a class="text-link" href="../setup/#windows" hreflang="en" aria-describedby="english-guides">คู่มือตั้งค่า (ภาษาอังกฤษ)</a>
-        <p class="quiet" id="english-guides">คู่มือตั้งค่าโดยละเอียดและวิดีโอสาธิตเป็นภาษาอังกฤษ</p>
       </div>
     </section>
     <section class="section night" aria-labelledby="status-title">
-      <div class="shell"><div class="localized-prose">
-        <h2 id="status-title">สถานะการทดสอบรุ่นทดลอง</h2>
-        <p class="lead">ทดสอบการจับคู่และตอบกลับบนอุปกรณ์ Android จำลองแล้ว การสแกนคิวอาร์โค้ดด้วยโทรศัพท์จริงยังรอการทดสอบ การดูหน้าจอ iPhone เป็นฟีเจอร์ทดลองสำหรับ iOS 27 ขึ้นไปและต้องใช้ Safari ที่รองรับการแชร์หน้าจอ ยังไม่ได้ทดสอบบน iPhone จริง</p>
-        <div class="actions"><a class="button" href="https://github.com/arpanjot-coding/Glove" hreflang="en">ดูซอร์สโค้ดบน GitHub</a></div>
-      </div></div>
+      <div class="shell release-grid">
+        <div class="localized-prose">
+          <h2 id="status-title">สถานะการทดสอบรุ่นทดลอง</h2>
+          <p class="lead">ทดสอบการจับคู่และตอบกลับบนอุปกรณ์ Android จำลองแล้ว การสแกนคิวอาร์โค้ดด้วยโทรศัพท์จริงยังรอการทดสอบ การดูหน้าจอ iPhone เป็นฟีเจอร์ทดลองสำหรับ iOS 27 ขึ้นไปและต้องใช้ Safari ที่รองรับการแชร์หน้าจอ ยังไม่ได้ทดสอบบน iPhone จริง</p>
+          <div class="actions"><a class="button" href="https://github.com/arpanjot-coding/Glove" hreflang="en">ดูซอร์สโค้ดบน GitHub</a></div>
+        </div>
+        <figure class="product-art">
+          <img src="../assets/glove-product.webp" width="1600" height="800" alt="ภาพประกอบพีซี Windows กับโทรศัพท์ที่เชื่อมต่อแบบไร้สาย" loading="lazy" decoding="async">
+        </figure>
+      </div>
     </section>
   </main>
   <footer class="site-footer">

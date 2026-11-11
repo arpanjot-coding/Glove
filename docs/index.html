@@ -23,7 +23,7 @@
   <!-- END GLOVE ALTERNATES -->
   <link rel="icon" type="image/svg+xml" href="assets/glove.svg">
   <link rel="stylesheet" href="assets/site.css">
-  <meta name="theme-color" content="#10213b">
+  <meta name="theme-color" content="#f8faff">
   <meta property="og:site_name" content="Glove">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Glove — Wireless Android Mirroring and File Transfer for Windows">
@@ -53,7 +53,7 @@
     }
   </script>
 </head>
-<body>
+<body class="home-page">
   <a class="skip" href="#main">Skip to content</a>
   <header class="site-head">
     <div class="shell head-inner">
@@ -87,121 +87,121 @@
     </div>
   </header>
   <main id="main">
-
-    <section class="hero" aria-labelledby="hero-title">
+    <section class="hero home-hero" aria-labelledby="hero-title">
       <div class="shell hero-inner">
         <div class="hero-copy">
-          <p class="kicker">Open-source Windows app</p>
-          <h1 id="hero-title">Your phone.<span>On Windows.</span></h1>
-          <p class="lead">Move files between your phone and PC, reply to eligible Android notifications, and test an Android device from your coding assistant.</p>
+          <h1 id="hero-title">Your phone <span>on Windows.</span></h1>
+          <p class="lead">Send files over Wi-Fi, reply to eligible Android notifications, and use your coding assistant to test an Android device.</p>
           <div class="actions">
             <a class="button" href="setup/">Set up Glove</a>
-            <a class="button secondary" href="demos/">Watch the demos</a>
+            <a class="button secondary" href="#demo">See it in action</a>
           </div>
-          <p class="hero-note">Windows x64 development preview · MIT</p>
+          <p class="hero-note">Windows x64 preview · Free and open source</p>
         </div>
-        <figure class="product-art">
-          <img src="assets/glove-product.webp" width="1600" height="800" alt="Glove product illustration of a Windows PC and phone" fetchpriority="high">
+        <figure class="hero-window">
+          <img class="hero-window-image" src="assets/glove-app.webp" width="1281" height="881" alt="The Glove Windows app showing file sharing, Android notifications and iPhone screen setup" fetchpriority="high">
         </figure>
       </div>
     </section>
-    <section class="section shell" aria-labelledby="choose">
-      <div class="section-heading">
-        <h2 id="choose">Connect your phone</h2>
-      </div>
-      <div class="feature-grid">
-        <article class="feature">
-          <h3>Transfer files over Wi-Fi</h3>
-          <p>Scan with your phone’s camera and open the link in its browser. Send files either way with Android or iPhone.</p>
-          <a class="text-link" href="setup/#files">Start a file sharing session</a>
-        </article>
-        <article class="feature">
-          <h3>Read and reply on Android</h3>
-          <p>Pair the Android companion with a QR code and choose which apps can share. Reply when the source notification offers it.</p>
-          <a class="text-link" href="setup/#notifications">Set up notifications</a>
-        </article>
-        <article class="feature">
-          <h3>Try iPhone screen viewing</h3>
-          <p>The experimental flow requires a compatible Safari screen picker and a verified local certificate. Physical playback testing is pending.</p>
-          <a class="text-link" href="setup/#iphone">Read the iPhone setup</a>
-        </article>
-      </div>
-      <p class="section-link"><a class="text-link" href="compatibility/">Check phone and network requirements</a></p>
-    </section>
-    <section class="section section-tinted" aria-labelledby="app-title">
+    <section class="section home-connections" aria-labelledby="choose">
       <div class="shell">
-        <div class="showcase">
-          <div class="showcase-copy">
-            <h2 id="app-title">Glove on Windows</h2>
-            <p class="lead">Open Personal for file sharing and Android notifications. Developer contains Android screen control and test-device tools.</p>
-            <a class="text-link" href="setup/">Read the connection guide</a>
+        <div class="section-heading">
+          <h2 id="choose">Connect over Wi-Fi.</h2>
+          <p>Keep your phone and PC on the same trusted private network.</p>
+        </div>
+        <div class="connection-showcase">
+          <figure class="product-shot">
+            <img src="assets/glove-files.webp" width="1281" height="881" loading="lazy" decoding="async" alt="Glove file sharing with its Start file sharing button and empty shared files list">
+          </figure>
+          <div class="connection-list">
+            <article>
+              <h3>Send files in either direction</h3>
+              <p>Scan Glove’s QR code with your Android or iPhone camera. Open the link in your browser to upload or download files.</p>
+              <a class="text-link" href="setup/#files">File sharing setup</a>
+            </article>
+            <article>
+              <h3>Reply to Android notifications</h3>
+              <p>Pair Glove Companion, choose which apps to share, and reply from Windows when the notification offers it.</p>
+              <a class="text-link" href="setup/#notifications">Notification setup</a>
+            </article>
+            <article>
+              <h3>Try iPhone screen viewing</h3>
+              <p>The experimental flow needs a compatible Safari screen picker and a verified local certificate. Physical playback testing is pending.</p>
+              <a class="text-link" href="setup/#iphone">iPhone preview setup</a>
+            </article>
           </div>
-          <figure class="app-screenshot">
-            <img src="assets/glove-app.webp" width="1281" height="881" loading="lazy" decoding="async" alt="Glove’s native Windows app with Android and iPhone connection options and file sharing">
-            <figcaption>Glove’s native Windows interface.</figcaption>
+        </div>
+        <p class="section-link"><a class="text-link" href="compatibility/">Check phone and network requirements</a></p>
+      </div>
+    </section>
+    <section class="section night home-demo" id="demo" aria-labelledby="proof-title">
+      <div class="shell demo-spotlight">
+        <div class="demo-copy">
+          <h2 id="proof-title">See Glove in action.</h2>
+          <p class="lead">Play a recording of an Android 16 emulator mirrored with scrcpy, then explore the tests behind the preview.</p>
+          <div class="demo-evidence">
+            <a href="demos/#developer-testing"><strong>MCP screenshot and tap</strong><span>Compare the screen before and after one agent action.</span></a>
+            <a href="demos/#file-sharing"><strong>File transfer checks</strong><span>See the byte counts and SHA-256 results from both directions.</span></a>
+          </div>
+          <div class="actions"><a class="button" href="demos/">Open all demos</a></div>
+        </div>
+        <figure class="demo-device">
+          <video controls playsinline preload="none" width="864" height="1920" poster="qa/emulator-scrcpy-poster.webp" aria-label="Silent screen recording of a test app mirrored from the Android 16 emulator">
+            <source src="qa/emulator-scrcpy.mp4" type="video/mp4">
+            <p><a href="qa/emulator-scrcpy.mp4">Open the Android mirror recording</a>.</p>
+          </video>
+          <figcaption>Android 16 emulator · Silent scrcpy recording</figcaption>
+        </figure>
+      </div>
+    </section>
+    <section class="section home-developer" aria-labelledby="mcp-home">
+      <div class="shell developer-showcase">
+        <div class="developer-copy">
+          <h2 id="mcp-home">Test on a connected Android device.</h2>
+          <p class="lead">Select an authorized device in Glove’s Developer workspace. Capture its screen in Codex, Claude Code, VS Code, or another local MCP client.</p>
+          <p>Enable input for taps, swipes, and Back when a test needs them.</p>
+          <a class="text-link" href="developers/">Set up Glove MCP</a>
+        </div>
+        <figure class="product-shot developer-screen">
+          <img src="assets/glove-android.webp" width="1281" height="881" loading="lazy" decoding="async" alt="Glove’s Developer workspace with the Android Wireless debugging setup instructions">
+        </figure>
+      </div>
+    </section>
+    <section class="section section-tinted" aria-labelledby="questions">
+      <div class="shell faq-layout">
+        <div class="section-heading"><h2 id="questions">Before you connect.</h2></div>
+        <div class="faq-list">
+          <details>
+            <summary>Which phones can I use?</summary>
+            <p>Browser file sharing works with Android and iPhone. Android notifications need Android 11 or newer and Glove Companion. <a href="compatibility/">See phone and network requirements.</a></p>
+          </details>
+          <details>
+            <summary>When do I need Android Developer options?</summary>
+            <p>Enable Wireless debugging for Android mirroring and MCP testing. File sharing and the notification companion use their own QR flows. <a href="setup/#android">See Android developer setup.</a></p>
+          </details>
+          <details>
+            <summary>How do local file transfers work?</summary>
+            <p>Glove hosts a temporary HTTP page on the PC. The session link grants access to the files you share. Use private Wi-Fi and stop sharing when you finish. <a href="setup/#files">See file sharing details.</a></p>
+          </details>
+          <details>
+            <summary>How do I install the preview?</summary>
+            <p>Build Glove on Windows x64 with Node.js and Git. <a href="setup/#windows">Follow the Windows build steps.</a></p>
+          </details>
+        </div>
+      </div>
+    </section>
+    <section class="section home-release" aria-labelledby="release-title">
+      <div class="shell">
+        <div class="night release-banner release-grid">
+          <div class="release-copy">
+            <h2 id="release-title">Build Glove on Windows.</h2>
+            <p class="lead">Start with the MIT-licensed preview from GitHub.</p>
+            <div class="actions"><a class="button" href="setup/#windows">Windows build guide</a></div>
+          </div>
+          <figure class="release-art">
+            <img src="assets/glove-product.webp" width="1600" height="800" loading="lazy" decoding="async" alt="">
           </figure>
         </div>
-      </div>
-    </section>
-    <section class="section shell" aria-labelledby="proof-title">
-      <div class="section-heading section-heading-wide">
-        <div>
-          <h2 id="proof-title">See Glove in action</h2>
-          <p>Recordings and checks from the Android 16 emulator run.</p>
-        </div>
-        <a class="button secondary" href="demos/">Open all demos</a>
-      </div>
-      <div class="proof-grid">
-        <article class="proof-card">
-          <h3>Android screen mirror</h3>
-          <p>Play a scrcpy recording of the Android test app.</p>
-          <a class="text-link" href="demos/#screen-mirroring">Watch the mirror</a>
-        </article>
-        <article class="proof-card">
-          <h3>MCP capture and tap</h3>
-          <p>Compare the screenshots taken before and after an MCP client sent a tap.</p>
-          <a class="text-link" href="demos/#developer-testing">Compare the screens</a>
-        </article>
-        <article class="proof-card">
-          <h3>File transfer integrity</h3>
-          <p>See the byte counts and SHA-256 checks from a real upload and download.</p>
-          <a class="text-link" href="demos/#file-sharing">See the transfer checks</a>
-        </article>
-      </div>
-    </section>
-    <section class="section night" aria-labelledby="mcp-home">
-      <div class="shell split">
-        <div>
-          <h2 id="mcp-home">Android testing with MCP</h2>
-          <p class="lead">Use Codex, Claude Code, VS Code or another local MCP client to capture a screenshot from an authorized test device. Enable input when you need to try a tap or swipe.</p>
-          <div class="actions"><a class="button" href="developers/">Set up Glove MCP</a></div>
-        </div>
-        <dl class="workflow">
-          <div><dt>Pair in Glove</dt><dd>Use the phone’s Wireless debugging menu to approve the PC.</dd></div>
-          <div><dt>Copy the client setup</dt><dd>Select the device in Glove’s Developer tools and copy its MCP configuration.</dd></div>
-          <div><dt>Capture the screen</dt><dd>Choose the connected test device and ask your client for a screenshot.</dd></div>
-        </dl>
-      </div>
-    </section>
-    <section class="section shell" aria-labelledby="questions">
-      <div class="section-heading"><h2 id="questions">Before you connect</h2></div>
-      <div class="faq-list">
-        <details>
-          <summary>Can I use a Samsung Galaxy or Google Pixel?</summary>
-          <p>Check that the phone runs Android 11 or newer and offers Wireless debugging in Developer options. Firmware and device management can affect pairing and input. <a href="compatibility/#android">See Android requirements and model families.</a></p>
-        </details>
-        <details>
-          <summary>Do I need a USB cable?</summary>
-          <p>Glove’s Android wireless setup pairs over a shared Wi-Fi network. If your network blocks discovery, use the manual pairing and connection fields in Glove. <a href="setup/#android">See the connection steps.</a></p>
-        </details>
-        <details>
-          <summary>How do local file transfers work?</summary>
-          <p>Glove hosts a temporary HTTP page on the PC. The session link grants access to the files you share. Use private Wi-Fi and stop sharing when you finish. <a href="setup/#files">See file sharing details.</a></p>
-        </details>
-        <details>
-          <summary>Where do I get Glove?</summary>
-          <p>The development preview is available from source. Follow the Windows build guide and check the repository for the current test status. <a href="setup/#windows">Build Glove on Windows.</a></p>
-        </details>
       </div>
     </section>
   </main>

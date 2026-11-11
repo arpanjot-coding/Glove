@@ -22,7 +22,7 @@
   <link rel="alternate" hreflang="zh-Hans" href="https://arpanjot-coding.github.io/Glove/zh/">
   <link rel="icon" type="image/svg+xml" href="../assets/glove.svg">
   <link rel="stylesheet" href="../assets/site.css">
-  <meta name="theme-color" content="#10213b">
+  <meta name="theme-color" content="#f8faff">
   <meta property="og:site_name" content="Glove">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Glove cho Windows – Truyền tệp và thông báo Android">
@@ -52,7 +52,7 @@
   "image": "https://arpanjot-coding.github.io/Glove/assets/glove-social.jpg"
 }</script>
 </head>
-<body class="localized-home">
+<body class="home-page localized-home">
   <a class="skip" href="#main">Chuyển đến nội dung</a>
   <header class="site-head">
     <div class="shell head-inner">
@@ -75,8 +75,8 @@
         </nav>
       </details>
       <nav class="nav">
-        <a href="#features">Kết nối điện thoại của bạn</a>
-        <a href="#getting-started">Thiết lập Glove</a>
+        <a href="#features">Tính năng</a>
+        <a href="#getting-started">Cài đặt</a>
         <a class="github" href="https://github.com/arpanjot-coding/Glove" hreflang="en">GitHub</a>
       </nav>
     </div>
@@ -93,8 +93,8 @@
           </div>
           <p class="hero-note">Bản xem trước miễn phí cho Windows x64 · Giấy phép MIT</p>
         </div>
-        <figure class="product-art">
-          <img src="../assets/glove-product.webp" width="1600" height="800" alt="Hình minh họa máy tính xách tay Windows và điện thoại" fetchpriority="high">
+        <figure class="hero-window" aria-label="Glove trên Windows">
+          <img class="hero-window-image" src="../assets/glove-app.webp" width="1281" height="881" alt="Giao diện Glove trên Windows với các tùy chọn thông báo Android và truyền tệp" fetchpriority="high">
         </figure>
       </div>
     </section>
@@ -106,39 +106,38 @@
         <article class="feature"><h3>Điều khiển và kiểm thử Android trên Windows</h3><p>Trong mục Developer, bạn có thể chiếu và điều khiển màn hình của thiết bị Android đã cấp quyền qua Wi-Fi. Hãy cài riêng bộ công cụ scrcpy chính thức và bật gỡ lỗi không dây. MCP chạy cục bộ hỗ trợ chụp màn hình và kiểm thử thao tác.</p></article>
       </div>
     </section>
-    <section class="section section-tinted" aria-labelledby="app-title">
-      <div class="shell localized-shot">
-        <div class="section-heading"><h2 id="app-title">Glove trên Windows</h2></div>
-        <figure class="app-screenshot">
-          <img src="../assets/glove-app.webp" width="1281" height="881" loading="lazy" decoding="async" alt="Giao diện Glove trên Windows với các tùy chọn thông báo Android và truyền tệp">
-        </figure>
-      </div>
-    </section>
-    <section class="section shell" id="getting-started" aria-labelledby="setup-title">
-      <div class="localized-prose">
-        <h2 id="setup-title">Chạy bản xem trước từ mã nguồn</h2>
-        <p class="lead">Mã nguồn được công khai theo giấy phép MIT. Thực hiện các bước sau trên máy tính chạy Windows x64.</p>
-        <ol class="localized-steps">
+    <section class="section section-tinted" id="getting-started" aria-labelledby="setup-title">
+      <div class="shell localized-setup-grid">
+        <div class="localized-prose">
+          <h2 id="setup-title">Chạy bản xem trước từ mã nguồn</h2>
+          <p class="lead">Mã nguồn được công khai theo giấy phép MIT. Thực hiện các bước sau trên máy tính chạy Windows x64.</p>
+          <ol class="localized-steps">
           <li>Cài đặt Git và Node.js 24 trở lên trên máy tính.</li>
           <li>Sao chép kho mã nguồn Glove và cài đặt các gói phụ thuộc.</li>
           <li>Khởi động Glove và kết nối điện thoại với cùng mạng Wi-Fi riêng.</li>
-        </ol>
+          </ol>
+          <a class="text-link" href="../setup/#windows" hreflang="en" aria-describedby="english-guides">Mở hướng dẫn</a>
+          <p class="quiet" id="english-guides">Hướng dẫn chi tiết và các bản trình diễn sử dụng tiếng Anh.</p>
+        </div>
         <pre class="setup-commands" dir="ltr" tabindex="0" aria-label="PowerShell"><code>git clone https://github.com/arpanjot-coding/Glove.git
 cd Glove
 npm ci
 node node_modules/electron/install.js
 npm run build
 npm start</code></pre>
-        <a class="text-link" href="../setup/#windows" hreflang="en" aria-describedby="english-guides">Mở hướng dẫn</a>
-        <p class="quiet" id="english-guides">Hướng dẫn chi tiết và các bản trình diễn sử dụng tiếng Anh.</p>
       </div>
     </section>
     <section class="section night" aria-labelledby="status-title">
-      <div class="shell"><div class="localized-prose">
-        <h2 id="status-title">Tình trạng bản xem trước</h2>
-        <p class="lead">Tính năng xem màn hình iPhone đang trong giai đoạn thử nghiệm. Tính năng này cần Safari có hỗ trợ chia sẻ màn hình và hướng tới iOS 27 trở lên. Việc ghép đôi bằng mã QR trên điện thoại Android thật và xem màn hình iPhone vẫn cần được kiểm tra trên thiết bị.</p>
-        <div class="actions"><a class="button" href="https://github.com/arpanjot-coding/Glove" hreflang="en">Xem mã nguồn trên GitHub</a></div>
-      </div></div>
+      <div class="shell release-grid">
+        <div class="localized-prose">
+          <h2 id="status-title">Tình trạng bản xem trước</h2>
+          <p class="lead">Tính năng xem màn hình iPhone đang trong giai đoạn thử nghiệm. Tính năng này cần Safari có hỗ trợ chia sẻ màn hình và hướng tới iOS 27 trở lên. Việc ghép đôi bằng mã QR trên điện thoại Android thật và xem màn hình iPhone vẫn cần được kiểm tra trên thiết bị.</p>
+          <div class="actions"><a class="button" href="https://github.com/arpanjot-coding/Glove" hreflang="en">Xem mã nguồn trên GitHub</a></div>
+        </div>
+        <figure class="product-art">
+          <img src="../assets/glove-product.webp" width="1600" height="800" alt="Hình minh họa máy tính xách tay Windows và điện thoại" loading="lazy" decoding="async">
+        </figure>
+      </div>
     </section>
   </main>
   <footer class="site-footer">

@@ -22,7 +22,7 @@
   <link rel="alternate" hreflang="zh-Hans" href="https://arpanjot-coding.github.io/Glove/zh/">
   <link rel="icon" type="image/svg+xml" href="../assets/glove.svg">
   <link rel="stylesheet" href="../assets/site.css">
-  <meta name="theme-color" content="#10213b">
+  <meta name="theme-color" content="#f8faff">
   <meta property="og:site_name" content="Glove">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Windows के लिए Glove | फ़ाइल ट्रांसफ़र और Android नोटिफ़िकेशन">
@@ -52,7 +52,7 @@
   "image": "https://arpanjot-coding.github.io/Glove/assets/glove-social.jpg"
 }</script>
 </head>
-<body class="localized-home">
+<body class="home-page localized-home">
   <a class="skip" href="#main">सामग्री पर जाएँ</a>
   <header class="site-head">
     <div class="shell head-inner">
@@ -75,8 +75,8 @@
         </nav>
       </details>
       <nav class="nav">
-        <a href="#features">Glove से आप क्या कर सकते हैं?</a>
-        <a href="#getting-started">सेटअप के चरण देखें</a>
+        <a href="#features">सुविधाएँ</a>
+        <a href="#getting-started">सेटअप</a>
         <a class="github" href="https://github.com/arpanjot-coding/Glove" hreflang="en">GitHub</a>
       </nav>
     </div>
@@ -93,8 +93,8 @@
           </div>
           <p class="hero-note">Windows x64 के लिए मुफ़्त, ओपन-सोर्स प्रीव्यू · MIT</p>
         </div>
-        <figure class="product-art">
-          <img src="../assets/glove-product.webp" width="1600" height="800" alt="एक Windows कंप्यूटर और उससे वायरलेस तरीके से जुड़े फ़ोन का चित्र।" fetchpriority="high">
+        <figure class="hero-window" aria-label="Windows पर Glove">
+          <img class="hero-window-image" src="../assets/glove-app.webp" width="1281" height="881" alt="Windows पर Glove की स्क्रीन, जिसमें फ़ाइल ट्रांसफ़र और Android नोटिफ़िकेशन के विकल्प हैं।" fetchpriority="high">
         </figure>
       </div>
     </section>
@@ -106,39 +106,38 @@
         <article class="feature"><h3>Android डेवलपर टूल</h3><p>Developer वर्कस्पेस से Wireless debugging और अलग से इंस्टॉल किए गए आधिकारिक scrcpy की मदद से Android स्क्रीन देखें और नियंत्रित करें। अधिकृत टेस्ट डिवाइस के लिए स्थानीय MCP भी उपलब्ध है।</p></article>
       </div>
     </section>
-    <section class="section section-tinted" aria-labelledby="app-title">
-      <div class="shell localized-shot">
-        <div class="section-heading"><h2 id="app-title">Windows पर Glove</h2></div>
-        <figure class="app-screenshot">
-          <img src="../assets/glove-app.webp" width="1281" height="881" loading="lazy" decoding="async" alt="Windows पर Glove की स्क्रीन, जिसमें फ़ाइल ट्रांसफ़र और Android नोटिफ़िकेशन के विकल्प हैं।">
-        </figure>
-      </div>
-    </section>
-    <section class="section shell" id="getting-started" aria-labelledby="setup-title">
-      <div class="localized-prose">
-        <h2 id="setup-title">Windows पर Glove सेट अप करें</h2>
-        <p class="lead">Glove का सोर्स कोड GitHub पर उपलब्ध है। प्रीव्यू चलाने के लिए Windows x64 पर Git और Node.js 24 या नए वर्शन की ज़रूरत है।</p>
-        <ol class="localized-steps">
+    <section class="section section-tinted" id="getting-started" aria-labelledby="setup-title">
+      <div class="shell localized-setup-grid">
+        <div class="localized-prose">
+          <h2 id="setup-title">Windows पर Glove सेट अप करें</h2>
+          <p class="lead">Glove का सोर्स कोड GitHub पर उपलब्ध है। प्रीव्यू चलाने के लिए Windows x64 पर Git और Node.js 24 या नए वर्शन की ज़रूरत है।</p>
+          <ol class="localized-steps">
           <li>GitHub से Glove रिपॉज़िटरी क्लोन करें और उसका फ़ोल्डर PowerShell में खोलें।</li>
           <li>ज़रूरी पैकेज के लिए npm ci चलाएँ, फिर Electron इंस्टॉल करने के लिए node node_modules/electron/install.js चलाएँ।</li>
           <li>ऐप बिल्ड करने के लिए npm run build चलाएँ, फिर npm start से खोलें।</li>
-        </ol>
+          </ol>
+          <a class="text-link" href="../setup/#windows" hreflang="en" aria-describedby="english-guides">अंग्रेज़ी में सेटअप गाइड</a>
+          <p class="quiet" id="english-guides">विस्तृत सेटअप गाइड और डेमो अंग्रेज़ी में हैं।</p>
+        </div>
         <pre class="setup-commands" dir="ltr" tabindex="0" aria-label="PowerShell"><code>git clone https://github.com/arpanjot-coding/Glove.git
 cd Glove
 npm ci
 node node_modules/electron/install.js
 npm run build
 npm start</code></pre>
-        <a class="text-link" href="../setup/#windows" hreflang="en" aria-describedby="english-guides">अंग्रेज़ी में सेटअप गाइड</a>
-        <p class="quiet" id="english-guides">विस्तृत सेटअप गाइड और डेमो अंग्रेज़ी में हैं।</p>
       </div>
     </section>
     <section class="section night" aria-labelledby="status-title">
-      <div class="shell"><div class="localized-prose">
-        <h2 id="status-title">प्रीव्यू की स्थिति</h2>
-        <p class="lead">वर्चुअल Android डिवाइस पर पेयरिंग और जवाब भेजने की जाँच हुई है। असली फ़ोन से QR स्कैन की जाँच बाकी है। iPhone स्क्रीन देखने की सुविधा प्रायोगिक है और इसका लक्ष्य iOS 27 या नया वर्शन है। इसके लिए स्क्रीन शेयरिंग वाला संगत Safari चाहिए। असली iPhone पर जाँच बाकी है।</p>
-        <div class="actions"><a class="button" href="https://github.com/arpanjot-coding/Glove" hreflang="en">GitHub पर सोर्स कोड</a></div>
-      </div></div>
+      <div class="shell release-grid">
+        <div class="localized-prose">
+          <h2 id="status-title">प्रीव्यू की स्थिति</h2>
+          <p class="lead">वर्चुअल Android डिवाइस पर पेयरिंग और जवाब भेजने की जाँच हुई है। असली फ़ोन से QR स्कैन की जाँच बाकी है। iPhone स्क्रीन देखने की सुविधा प्रायोगिक है और इसका लक्ष्य iOS 27 या नया वर्शन है। इसके लिए स्क्रीन शेयरिंग वाला संगत Safari चाहिए। असली iPhone पर जाँच बाकी है।</p>
+          <div class="actions"><a class="button" href="https://github.com/arpanjot-coding/Glove" hreflang="en">GitHub पर सोर्स कोड</a></div>
+        </div>
+        <figure class="product-art">
+          <img src="../assets/glove-product.webp" width="1600" height="800" alt="एक Windows कंप्यूटर और उससे वायरलेस तरीके से जुड़े फ़ोन का चित्र।" loading="lazy" decoding="async">
+        </figure>
+      </div>
     </section>
   </main>
   <footer class="site-footer">

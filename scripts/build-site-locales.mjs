@@ -15,17 +15,17 @@ const windowsCommands = [
 const check = process.argv.includes('--check');
 const english = { slug: '', lang: 'en', og: 'en_US', language: 'English', languageMenu: 'Language' };
 const languages = [
-  { slug: 'ar', lang: 'ar', og: 'ar_AR', rtl: true, skip: 'انتقل إلى المحتوى' },
-  { slug: 'de', lang: 'de', og: 'de_DE', skip: 'Zum Inhalt springen' },
-  { slug: 'es', lang: 'es', og: 'es_ES', skip: 'Saltar al contenido' },
-  { slug: 'fr', lang: 'fr', og: 'fr_FR', skip: 'Aller au contenu' },
-  { slug: 'hi', lang: 'hi', og: 'hi_IN', skip: 'सामग्री पर जाएँ' },
-  { slug: 'it', lang: 'it', og: 'it_IT', skip: 'Vai al contenuto' },
-  { slug: 'ja', lang: 'ja', og: 'ja_JP', skip: '本文へ移動' },
-  { slug: 'ru', lang: 'ru', og: 'ru_RU', skip: 'Перейти к содержанию' },
-  { slug: 'th', lang: 'th', og: 'th_TH', skip: 'ข้ามไปยังเนื้อหา' },
-  { slug: 'vi', lang: 'vi', og: 'vi_VN', skip: 'Chuyển đến nội dung' },
-  { slug: 'zh', lang: 'zh-Hans', og: 'zh_CN', skip: '跳至正文' },
+  { slug: 'ar', lang: 'ar', og: 'ar_AR', rtl: true, skip: 'انتقل إلى المحتوى', nav: ['المزايا', 'الإعداد'] },
+  { slug: 'de', lang: 'de', og: 'de_DE', skip: 'Zum Inhalt springen', nav: ['Funktionen', 'Einrichtung'] },
+  { slug: 'es', lang: 'es', og: 'es_ES', skip: 'Saltar al contenido', nav: ['Funciones', 'Configuración'] },
+  { slug: 'fr', lang: 'fr', og: 'fr_FR', skip: 'Aller au contenu', nav: ['Fonctionnalités', 'Configuration'] },
+  { slug: 'hi', lang: 'hi', og: 'hi_IN', skip: 'सामग्री पर जाएँ', nav: ['सुविधाएँ', 'सेटअप'] },
+  { slug: 'it', lang: 'it', og: 'it_IT', skip: 'Vai al contenuto', nav: ['Funzionalità', 'Configurazione'] },
+  { slug: 'ja', lang: 'ja', og: 'ja_JP', skip: '本文へ移動', nav: ['機能', 'セットアップ'] },
+  { slug: 'ru', lang: 'ru', og: 'ru_RU', skip: 'Перейти к содержанию', nav: ['Возможности', 'Установка'] },
+  { slug: 'th', lang: 'th', og: 'th_TH', skip: 'ข้ามไปยังเนื้อหา', nav: ['ฟีเจอร์', 'การตั้งค่า'] },
+  { slug: 'vi', lang: 'vi', og: 'vi_VN', skip: 'Chuyển đến nội dung', nav: ['Tính năng', 'Cài đặt'] },
+  { slug: 'zh', lang: 'zh-Hans', og: 'zh_CN', skip: '跳至正文', nav: ['功能', '安装'] },
 ];
 const fields = [
   'language', 'languageMenu', 'title', 'description', 'heroTitle', 'heroBody',
@@ -104,7 +104,7 @@ function localizedPage(locale) {
 ${alternates}
   <link rel="icon" type="image/svg+xml" href="../assets/glove.svg">
   <link rel="stylesheet" href="../assets/site.css">
-  <meta name="theme-color" content="#10213b">
+  <meta name="theme-color" content="#f8faff">
   <meta property="og:site_name" content="Glove">
   <meta property="og:type" content="website">
   <meta property="og:title" content="${strings.title}">
@@ -122,15 +122,15 @@ ${alternates}
   <meta name="twitter:image:alt" content="${strings.artworkAlt}">
   <script type="application/ld+json">${structuredData}</script>
 </head>
-<body class="localized-home">
+<body class="home-page localized-home">
   <a class="skip" href="#main">${locale.skip}</a>
   <header class="site-head">
     <div class="shell head-inner">
       <a class="brand" href="./" aria-current="page"><img src="../assets/glove.svg" width="34" height="34" alt="">Glove</a>
 ${picker({ current: locale.lang, label: locale.languageMenu, prefix: '../' })}
       <nav class="nav">
-        <a href="#features">${strings.featuresTitle}</a>
-        <a href="#getting-started">${strings.setupAction}</a>
+        <a href="#features">${escape(locale.nav[0])}</a>
+        <a href="#getting-started">${escape(locale.nav[1])}</a>
         <a class="github" href="${repository}" hreflang="en">GitHub</a>
       </nav>
     </div>
@@ -147,8 +147,8 @@ ${picker({ current: locale.lang, label: locale.languageMenu, prefix: '../' })}
           </div>
           <p class="hero-note">${strings.preview}</p>
         </div>
-        <figure class="product-art">
-          <img src="../assets/glove-product.webp" width="1600" height="800" alt="${strings.artworkAlt}" fetchpriority="high">
+        <figure class="hero-window" aria-label="${strings.screenshotTitle}">
+          <img class="hero-window-image" src="../assets/glove-app.webp" width="1281" height="881" alt="${strings.screenshotAlt}" fetchpriority="high">
         </figure>
       </div>
     </section>
@@ -160,32 +160,31 @@ ${picker({ current: locale.lang, label: locale.languageMenu, prefix: '../' })}
         <article class="feature"><h3>${strings.developerTitle}</h3><p>${strings.developerBody}</p></article>
       </div>
     </section>
-    <section class="section section-tinted" aria-labelledby="app-title">
-      <div class="shell localized-shot">
-        <div class="section-heading"><h2 id="app-title">${strings.screenshotTitle}</h2></div>
-        <figure class="app-screenshot">
-          <img src="../assets/glove-app.webp" width="1281" height="881" loading="lazy" decoding="async" alt="${strings.screenshotAlt}">
-        </figure>
-      </div>
-    </section>
-    <section class="section shell" id="getting-started" aria-labelledby="setup-title">
-      <div class="localized-prose">
-        <h2 id="setup-title">${strings.setupTitle}</h2>
-        <p class="lead">${strings.setupBody}</p>
-        <ol class="localized-steps">
+    <section class="section section-tinted" id="getting-started" aria-labelledby="setup-title">
+      <div class="shell localized-setup-grid">
+        <div class="localized-prose">
+          <h2 id="setup-title">${strings.setupTitle}</h2>
+          <p class="lead">${strings.setupBody}</p>
+          <ol class="localized-steps">
 ${locale.setupSteps.map(step => `          <li>${escape(step)}</li>`).join('\n')}
-        </ol>
+          </ol>
+          <a class="text-link" href="../setup/#windows" hreflang="en" aria-describedby="english-guides">${strings.docsAction}</a>
+          <p class="quiet" id="english-guides">${strings.englishNotice}</p>
+        </div>
         <pre class="setup-commands" dir="ltr" tabindex="0" aria-label="PowerShell"><code>${windowsCommands}</code></pre>
-        <a class="text-link" href="../setup/#windows" hreflang="en" aria-describedby="english-guides">${strings.docsAction}</a>
-        <p class="quiet" id="english-guides">${strings.englishNotice}</p>
       </div>
     </section>
     <section class="section night" aria-labelledby="status-title">
-      <div class="shell"><div class="localized-prose">
-        <h2 id="status-title">${strings.statusTitle}</h2>
-        <p class="lead">${strings.statusBody}</p>
-        <div class="actions"><a class="button" href="${repository}" hreflang="en">${strings.sourceAction}</a></div>
-      </div></div>
+      <div class="shell release-grid">
+        <div class="localized-prose">
+          <h2 id="status-title">${strings.statusTitle}</h2>
+          <p class="lead">${strings.statusBody}</p>
+          <div class="actions"><a class="button" href="${repository}" hreflang="en">${strings.sourceAction}</a></div>
+        </div>
+        <figure class="product-art">
+          <img src="../assets/glove-product.webp" width="1600" height="800" alt="${strings.artworkAlt}" loading="lazy" decoding="async">
+        </figure>
+      </div>
     </section>
   </main>
   <footer class="site-footer">

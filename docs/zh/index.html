@@ -22,7 +22,7 @@
   <link rel="alternate" hreflang="zh-Hans" href="https://arpanjot-coding.github.io/Glove/zh/">
   <link rel="icon" type="image/svg+xml" href="../assets/glove.svg">
   <link rel="stylesheet" href="../assets/site.css">
-  <meta name="theme-color" content="#10213b">
+  <meta name="theme-color" content="#f8faff">
   <meta property="og:site_name" content="Glove">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Glove Windows 版 | 手机文件互传、Android 通知与无线投屏">
@@ -52,7 +52,7 @@
   "image": "https://arpanjot-coding.github.io/Glove/assets/glove-social.jpg"
 }</script>
 </head>
-<body class="localized-home">
+<body class="home-page localized-home">
   <a class="skip" href="#main">跳至正文</a>
   <header class="site-head">
     <div class="shell head-inner">
@@ -75,8 +75,8 @@
         </nav>
       </details>
       <nav class="nav">
-        <a href="#features">Glove 能做什么？</a>
-        <a href="#getting-started">查看设置步骤</a>
+        <a href="#features">功能</a>
+        <a href="#getting-started">安装</a>
         <a class="github" href="https://github.com/arpanjot-coding/Glove" hreflang="en">GitHub</a>
       </nav>
     </div>
@@ -93,8 +93,8 @@
           </div>
           <p class="hero-note">Windows x64 免费开源预览版 · MIT</p>
         </div>
-        <figure class="product-art">
-          <img src="../assets/glove-product.webp" width="1600" height="800" alt="Windows 电脑与手机无线连接的产品示意图。" fetchpriority="high">
+        <figure class="hero-window" aria-label="Windows 版 Glove 界面">
+          <img class="hero-window-image" src="../assets/glove-app.webp" width="1281" height="881" alt="Windows 版 Glove 界面中的文件传输和安卓通知选项。" fetchpriority="high">
         </figure>
       </div>
     </section>
@@ -106,39 +106,38 @@
         <article class="feature"><h3>Android 开发者工具</h3><p>在开发者工作区开启无线调试，并使用单独安装的官方 scrcpy 投屏和控制安卓设备。也可通过本地 MCP 在已授权的 Android 测试设备上测试应用。</p></article>
       </div>
     </section>
-    <section class="section section-tinted" aria-labelledby="app-title">
-      <div class="shell localized-shot">
-        <div class="section-heading"><h2 id="app-title">Windows 版 Glove 界面</h2></div>
-        <figure class="app-screenshot">
-          <img src="../assets/glove-app.webp" width="1281" height="881" loading="lazy" decoding="async" alt="Windows 版 Glove 界面中的文件传输和安卓通知选项。">
-        </figure>
-      </div>
-    </section>
-    <section class="section shell" id="getting-started" aria-labelledby="setup-title">
-      <div class="localized-prose">
-        <h2 id="setup-title">在 Windows 上设置 Glove</h2>
-        <p class="lead">Glove 源代码已在 GitHub 公开。运行预览版需要 Windows x64、Git 和 Node.js 24 或更新版本。</p>
-        <ol class="localized-steps">
+    <section class="section section-tinted" id="getting-started" aria-labelledby="setup-title">
+      <div class="shell localized-setup-grid">
+        <div class="localized-prose">
+          <h2 id="setup-title">在 Windows 上设置 Glove</h2>
+          <p class="lead">Glove 源代码已在 GitHub 公开。运行预览版需要 Windows x64、Git 和 Node.js 24 或更新版本。</p>
+          <ol class="localized-steps">
           <li>从 GitHub 克隆 Glove 仓库，然后在 PowerShell 中打开仓库目录。</li>
           <li>运行 npm ci 安装依赖，再运行 node node_modules/electron/install.js 安装 Electron。</li>
           <li>运行 npm run build 构建应用，然后运行 npm start 启动。</li>
-        </ol>
+          </ol>
+          <a class="text-link" href="../setup/#windows" hreflang="en" aria-describedby="english-guides">设置指南（英文）</a>
+          <p class="quiet" id="english-guides">详细设置指南和演示为英文。</p>
+        </div>
         <pre class="setup-commands" dir="ltr" tabindex="0" aria-label="PowerShell"><code>git clone https://github.com/arpanjot-coding/Glove.git
 cd Glove
 npm ci
 node node_modules/electron/install.js
 npm run build
 npm start</code></pre>
-        <a class="text-link" href="../setup/#windows" hreflang="en" aria-describedby="english-guides">设置指南（英文）</a>
-        <p class="quiet" id="english-guides">详细设置指南和演示为英文。</p>
       </div>
     </section>
     <section class="section night" aria-labelledby="status-title">
-      <div class="shell"><div class="localized-prose">
-        <h2 id="status-title">预览版验证进度</h2>
-        <p class="lead">已在 Android 模拟器上验证配对和通知回复，仍需使用实体手机验证扫码。iPhone 屏幕查看是面向 iOS 27 及以上版本的实验功能，需要支持屏幕共享的 Safari，尚未在实体 iPhone 上验证。</p>
-        <div class="actions"><a class="button" href="https://github.com/arpanjot-coding/Glove" hreflang="en">在 GitHub 查看源代码</a></div>
-      </div></div>
+      <div class="shell release-grid">
+        <div class="localized-prose">
+          <h2 id="status-title">预览版验证进度</h2>
+          <p class="lead">已在 Android 模拟器上验证配对和通知回复，仍需使用实体手机验证扫码。iPhone 屏幕查看是面向 iOS 27 及以上版本的实验功能，需要支持屏幕共享的 Safari，尚未在实体 iPhone 上验证。</p>
+          <div class="actions"><a class="button" href="https://github.com/arpanjot-coding/Glove" hreflang="en">在 GitHub 查看源代码</a></div>
+        </div>
+        <figure class="product-art">
+          <img src="../assets/glove-product.webp" width="1600" height="800" alt="Windows 电脑与手机无线连接的产品示意图。" loading="lazy" decoding="async">
+        </figure>
+      </div>
     </section>
   </main>
   <footer class="site-footer">
