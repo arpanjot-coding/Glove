@@ -2,7 +2,8 @@
 import { packager } from '@electron/packager';
 import { spawnSync } from 'node:child_process';
 import { copyFile, stat } from 'node:fs/promises';
-for (const script of ['scripts/brand.mjs', 'scripts/licenses.mjs']) { const result = spawnSync(process.execPath, [script], { stdio: 'inherit' }); if (result.status !== 0) process.exit(result.status || 1); }
+const licenses = spawnSync(process.execPath, ['scripts/licenses.mjs'], { stdio: 'inherit' });
+if (licenses.status !== 0) process.exit(licenses.status || 1);
 const companionApk = 'android/out/Glove-Companion.apk';
 const hasCompanion = await stat(companionApk).then(file => file.isFile()).catch(() => false);
 const output = await packager({

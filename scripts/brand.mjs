@@ -1,30 +1,73 @@
 // SPDX-License-Identifier: MIT
-// Original code-native mark. PNG and ICO are generated without an image library.
+// Generate platform assets from the same Glove mark.
 import { deflateSync } from 'node:zlib';
-import { writeFile, mkdir } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
+import { brandBlue, brandOutline, brandPath, brandRadius, brandSize, brandSvg } from '../src/brand/mark.mjs';
+
+function outlinePoints() {
+  const points = [];
+  for (const [command, ...coordinates] of brandOutline) {
+    if (command === 'M' || command === 'L') {
+      points.push(coordinates);
+    } else if (command === 'C') {
+      const [x0, y0] = points.at(-1);
+      const [x1, y1, x2, y2, x3, y3] = coordinates;
+      for (let step = 1; step <= 32; step++) {
+        const t = step / 32;
+        const s = 1 - t;
+        points.push([
+          s ** 3 * x0 + 3 * s ** 2 * t * x1 + 3 * s * t ** 2 * x2 + t ** 3 * x3,
+          s ** 3 * y0 + 3 * s ** 2 * t * y1 + 3 * s * t ** 2 * y2 + t ** 3 * y3,
+        ]);
+      }
+    } else if (command === 'Z') {
+      points.push(points[0]);
+    } else {
+      throw new Error(`Unsupported brand path command: ${command}`);
+    }
+  }
+  return points;
+}
+
+const outline = outlinePoints();
+const blue = brandBlue.slice(1).match(/../g).map(value => Number.parseInt(value, 16));
+const white = [255, 255, 255];
+const samples = 4;
+function crossingsAt(y) {
+  const crossings = [];
+  for (let i = 1; i < outline.length; i++) {
+    const [x0, y0] = outline[i - 1];
+    const [x1, y1] = outline[i];
+    if ((y0 > y) !== (y1 > y)) crossings.push(x0 + (x1 - x0) * (y - y0) / (y1 - y0));
+  }
+  return crossings.sort((a, b) => a - b);
+}
+
 const table = Array.from({ length: 256 }, (_, n) => { for (let k = 0; k < 8; k++) n = n & 1 ? 0xedb88320 ^ (n >>> 1) : n >>> 1; return n >>> 0; });
 function crc(bytes) { let n = 0xffffffff; for (const b of bytes) n = table[(n ^ b) & 255] ^ (n >>> 8); return (n ^ 0xffffffff) >>> 0; }
 function chunk(type, data) { const kind = Buffer.from(type); const size = Buffer.alloc(4); size.writeUInt32BE(data.length); const checksum = Buffer.alloc(4); checksum.writeUInt32BE(crc(Buffer.concat([kind, data]))); return Buffer.concat([size, kind, data, checksum]); }
 function png(size) {
   const raw = Buffer.alloc(size * (size * 4 + 1));
+  const scale = brandSize / (size * samples);
+  const rows = Array.from({ length: size * samples }, (_, y) => crossingsAt((y + .5) * scale));
+  const far = brandSize - brandRadius;
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
     const rgba = [0, 0, 0, 0];
-    for (let sy = 0; sy < 4; sy++) for (let sx = 0; sx < 4; sx++) {
-      const px = (x + (sx + .5) / 4) * 64 / size;
-      const py = (y + (sy + .5) / 4) * 64 / size;
-      const dx = Math.max(18 - px, 0, px - 46), dy = Math.max(18 - py, 0, py - 46);
-      if (Math.hypot(dx, dy) > 18) continue;
-      const radius = Math.hypot(px - 32, py - 32);
-      const ring = radius >= 8 && radius <= 15 && !(px > 32 && Math.abs(py - 32) < (px - 32) * .85);
-      const bar = px >= 31 && px <= 47 && py >= 30 && py <= 37;
-      const side = px >= 40 && px <= 47 && py >= 34 && py <= 43;
-      const color = ring || bar || side ? [255, 255, 255] : [37, 99, 235];
-      for (let i = 0; i < 3; i++) rgba[i] += color[i]; rgba[3] += 255;
+    for (let sy = 0; sy < samples; sy++) for (let sx = 0; sx < samples; sx++) {
+      const px = (x * samples + sx + .5) * scale;
+      const py = (y * samples + sy + .5) * scale;
+      const dx = Math.max(brandRadius - px, 0, px - far);
+      const dy = Math.max(brandRadius - py, 0, py - far);
+      if (dx * dx + dy * dy > brandRadius * brandRadius) continue;
+      const edges = rows[y * samples + sy];
+      const isMark = edges.some((edge, index) => index % 2 === 0 && px >= edge && px < edges[index + 1]);
+      const color = isMark ? white : blue;
+      for (let i = 0; i < 3; i++) rgba[i] += color[i];
+      rgba[3]++;
     }
     const pos = y * (size * 4 + 1) + 1 + x * 4;
-    const alpha = rgba[3] / (255 * 16);
-    for (let c = 0; c < 3; c++) raw[pos + c] = alpha ? Math.round(rgba[c] / (16 * alpha)) : 0;
-    raw[pos + 3] = Math.round(rgba[3] / 16);
+    for (let c = 0; c < 3; c++) raw[pos + c] = rgba[3] ? Math.round(rgba[c] / rgba[3]) : 0;
+    raw[pos + 3] = Math.round(255 * rgba[3] / (samples * samples));
   }
   const header = Buffer.alloc(13); header.writeUInt32BE(size, 0); header.writeUInt32BE(size, 4); header[8] = 8; header[9] = 6;
   return Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]), chunk('IHDR', header), chunk('IDAT', deflateSync(raw)), chunk('IEND', Buffer.alloc(0))]);
@@ -34,7 +77,32 @@ const images = sizes.map(png);
 const directory = Buffer.alloc(6 + sizes.length * 16); directory.writeUInt16LE(1, 2); directory.writeUInt16LE(sizes.length, 4);
 let offset = directory.length;
 for (let i = 0; i < sizes.length; i++) { const pos = 6 + i * 16; directory[pos] = sizes[i] % 256; directory[pos + 1] = sizes[i] % 256; directory.writeUInt16LE(1, pos + 4); directory.writeUInt16LE(32, pos + 6); directory.writeUInt32LE(images[i].length, pos + 8); directory.writeUInt32LE(offset, pos + 12); offset += images[i].length; }
-await mkdir('assets', { recursive: true });
-await writeFile('assets/glove.ico', Buffer.concat([directory, ...images]));
-await writeFile('src/ui/brand.png', images.at(-1));
-console.log('Generated original Glove PNG and Windows icon.');
+const r = brandRadius;
+const far = brandSize - r;
+const corner = `A${r} ${r} 0 0 1`;
+const androidTile = `M${r} 0 H${far} ${corner} ${brandSize} ${r} V${far} ${corner} ${far} ${brandSize} H${r} ${corner} 0 ${far} V${r} ${corner} ${r} 0 Z`;
+const androidVector = `<?xml version="1.0" encoding="utf-8"?>
+<!-- Generated by scripts/brand.mjs. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp" android:height="48dp"
+    android:viewportWidth="${brandSize}" android:viewportHeight="${brandSize}">
+    <path android:fillColor="${brandBlue}" android:pathData="${androidTile}" />
+    <path android:fillColor="#FFFFFF" android:pathData="${brandPath}" />
+</vector>
+`;
+const assets = [
+  ['assets/glove.ico', Buffer.concat([directory, ...images])],
+  ['src/ui/brand.png', images.at(-1)],
+  ['src/ui/brand.svg', Buffer.from(brandSvg + '\n')],
+  ['docs/assets/glove.svg', Buffer.from(brandSvg + '\n')],
+  ['android/src/main/res/drawable/glove_icon.xml', Buffer.from(androidVector)],
+];
+const check = process.argv.includes('--check');
+for (const [filename, contents] of assets) {
+  if (check) {
+    if (!(await readFile(filename)).equals(contents)) throw new Error(`Regenerate ${filename} with node scripts/brand.mjs`);
+  } else {
+    await writeFile(filename, contents);
+  }
+}
+console.log(check ? 'All Glove logo assets match the master mark.' : 'Generated Glove icons for Windows, Android and the web.');
