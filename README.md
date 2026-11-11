@@ -79,6 +79,8 @@ Choose an authorized test device in **Developer → MCP testing** and copy the c
 
 The [compatibility guide](https://arpanjot-coding.github.io/Glove/compatibility/) covers Samsung Galaxy, Google Pixel, OnePlus, Motorola, Xiaomi, and other phone families. Wireless debugging availability depends on the Android version, model, and device policy. See the guide for tested configurations and platform requirements.
 
+Choose **Language** on the [Glove website](https://arpanjot-coding.github.io/Glove/) for the product overview and Windows setup in 12 languages. Edit `docs/locales/` and run `node scripts/build-site-locales.mjs` to regenerate the localized pages and sitemap.
+
 Run `npm test` to check pairing, notification replies, local transfers, iPhone signaling, and the MCP protocol. Use `npm run package:win` for a portable Windows build, or install [NSIS 3.13](https://nsis.sourceforge.io/Download) and run `npm run installer:win` to generate `release/Glove-Setup-x64.exe`. Set `GLOVE_MAKENSIS` to the full compiler path if it is outside PATH. Build the [Android companion](android/README.md) first to bundle its APK. [Report an issue](https://github.com/arpanjot-coding/Glove/issues/new)
 
 ## License
