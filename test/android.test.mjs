@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { EventEmitter } from 'node:events';
 import { endpoint, parseDevices, parseMdnsServices, AndroidService } from '../src/desktop/android.mjs';
 test('wireless addresses validate IP and port without accepting options or shell syntax', () => {
   assert.equal(endpoint(' 192.168.1.42:37123 '), '192.168.1.42:37123');
@@ -24,9 +25,9 @@ test('device parsing recognizes real space-aligned ADB rows and preserves author
 test('missing tools and invalid pairing codes return actionable failures', async () => {
   const service = new AndroidService({ getFolder: () => '' });
   assert.equal(await service.ready(), false);
-  await assert.rejects(service.refresh(), /Settings/);
+  await assert.rejects(service.refresh(), /tools folder/);
   await assert.rejects(service.pair('192.168.1.2:5555', '123;45'), /six-digit/);
-  await assert.rejects(service.startQr(), /Settings/);
+  await assert.rejects(service.startQr(), /tools folder/);
   assert.equal(service.snapshot().qr.active,false);
   assert.equal(service.snapshot().qr.status,'error');
 });
@@ -145,12 +146,70 @@ test('QR expires, repeated starts rotate credentials, and stopping also closes m
   assert.equal(service.snapshot().qr.active,false);
   assert.equal(service.snapshot().qr.value,'');
   let killed=false;
-  service.mirror={kill:()=>{killed=true;}};
+  service.spawnMirror=()=>Object.assign(new EventEmitter(), {stderr:new EventEmitter(), kill(){ killed=true; this.emit('close', 0); }});
+  service.run=async()=> 'emulator-5554 device model:Test';
+  await service.start('emulator-5554');
   service.stop();
   assert.equal(killed,true);
   assert.equal(service.mirror,null);
   assert.equal(service.qrTimer,null);
   assert.equal(service.qrExpiryTimer,null);
+});
+
+test('mirroring has one start in flight and cannot open a screen after Stop', async () => {
+  const response = Promise.withResolvers();
+  let opened = 0;
+  const service = fakeAndroid(() => response.promise, { spawnMirror: () => { opened++; } });
+  const start = service.start('emulator-5554');
+  await assert.rejects(service.start('emulator-5556'), /already opening or open/);
+  service.stop();
+  response.resolve('emulator-5554 device model:Test');
+  await assert.rejects(start, /opening the Android screen was cancelled/i);
+  assert.equal(opened, 0);
+  assert.equal(service.snapshot().mirroring, false);
+});
+
+test('mirroring waits for the old process to close and uses the selected ADB executable', async () => {
+  const child = Object.assign(new EventEmitter(), { stderr: new EventEmitter(), kill() {} });
+  const service = fakeAndroid(async () => 'emulator-5554 device model:Test', {
+    spawnMirror: (_file, args, options) => {
+      assert.deepEqual(args.slice(0, 2), ['--serial', 'emulator-5554']);
+      assert.match(options.env.ADB, /Glove tools[/\\]adb\.exe$/);
+      return child;
+    }
+  });
+  await service.start('emulator-5554');
+  service.stop();
+  await assert.rejects(service.start('emulator-5554'), /already opening or open/);
+  child.emit('close', 0);
+  assert.equal(service.snapshot().mirroring, false);
+});
+
+test('an old device refresh cannot overwrite a newer result or a changed tools folder', async () => {
+  const first = Promise.withResolvers();
+  const second = Promise.withResolvers();
+  const third = Promise.withResolvers();
+  const responses = [first, second, third];
+  let folder = 'C:\\Glove tools';
+  const service = fakeAndroid(() => responses.shift().promise, { getFolder: () => folder });
+  const older = service.refresh();
+  const newer = service.refresh();
+  second.resolve('emulator-5556 device model:New');
+  await newer;
+  first.resolve('emulator-5554 device model:Old');
+  assert.equal((await older)[0].serial, 'emulator-5556');
+  const fromOldFolder = service.refresh();
+  folder = 'C:\\Other tools';
+  service.toolsChanged();
+  third.resolve('emulator-5556 device model:New');
+  await assert.rejects(fromOldFolder, /tools folder changed/);
+  assert.deepEqual(service.snapshot().devices, []);
+});
+
+test('a failed manual ADB pair never returns the six-digit code', async () => {
+  const service = fakeAndroid(async () => { throw new Error('adb pair exited unsuccessfully with 123456'); });
+  await assert.rejects(service.pair('192.168.1.2:5555', '123456'), error =>
+    /Pairing failed/.test(error.message) && !error.message.includes('123456'));
 });
 
 test('pair errors and missing discovery never expose QR credentials',async()=>{

@@ -10,7 +10,7 @@ license: MIT
 
 1. Record the app build, feature under test, starting screen, and expected result. Use an emulator or test account when the flow could expose personal data.
 2. Select one authorized Android device in Glove. Pair a physical phone using **Wireless debugging**. An emulator can use its normal local ADB transport. Identify which transport you tested.
-3. In **Settings → Developer tools**, refresh devices, choose the target, and copy the MCP configuration for your client. Start with screenshot access. For a requested interactive test, enable input on that same device using `docs/MCP.md` in the repository or `MCP.md` in the Windows package.
+3. In **Developer → MCP testing**, refresh devices, choose the target, and copy the MCP configuration for your client. Start with screenshot access. For a requested interactive test, enable input on that same device using `docs/MCP.md` in the repository or `MCP.md` in the Windows package.
 4. Call `android_list_devices` and confirm the expected device is online. Open the test app using the project's normal test setup. Coordinate with anyone else using the device before sending input.
 
 ## Run a mobile flow

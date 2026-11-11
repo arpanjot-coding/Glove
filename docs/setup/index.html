@@ -49,7 +49,8 @@
       <nav class="toc" aria-label="On this page">
         <strong>On this page</strong>
         <a href="#windows">Windows setup</a>
-        <a href="#android">Android QR pairing</a>
+        <a href="#notifications">Android notifications</a>
+        <a href="#android">Android developer pairing</a>
         <a href="#manual">Manual pairing</a>
         <a href="#iphone">iPhone viewing</a>
         <a href="#files">File sharing</a>
@@ -67,10 +68,21 @@ node node_modules/electron/install.js
 npm run dev</code></pre>
         <p>The portable package command is <code>npm run package:win</code>. The unsigned development package opened on the Windows test PC. Your PC’s application policy determines whether it can run. <a href="https://github.com/arpanjot-coding/Glove#readme">Check the build and verification notes.</a></p>
       </section>
-      <section id="android" aria-labelledby="android-title">
-        <h2 id="android-title">Pair Android over Wi-Fi with a QR code</h2>
+      <section id="notifications" aria-labelledby="notifications-title">
+        <h2 id="notifications-title">Android notifications and replies</h2>
+        <p>Glove Companion runs on Android 11 or newer. Pairing uses a QR in the companion and Android’s notification access permission. Developer options can stay off.</p>
         <ol>
-          <li>Download and extract the <a href="https://github.com/Genymobile/scrcpy/blob/master/doc/windows.md">official scrcpy Windows tools</a>. In Glove’s Settings, select the extracted folder containing <code>adb.exe</code> and <code>scrcpy.exe</code>.</li>
+          <li>Build the <a href="https://github.com/arpanjot-coding/Glove/tree/main/android#build-the-companion-on-windows">Android companion</a>, then open <strong>Personal → Notifications → Share Android installer</strong> in Glove.</li>
+          <li>Scan the file sharing QR with the phone camera and install the APK. Select <strong>Continue to pairing → Pair Android</strong> on Windows.</li>
+          <li>In Glove Companion, tap <strong>Scan Windows QR</strong>. Confirm the matching six-digit code and approve the phone on Windows.</li>
+          <li>Grant notification access in Android Settings and choose which apps to share. Reply appears when a notification supports a text response.</li>
+        </ol>
+        <p>Notification forwarding and a quick reply passed on an Android emulator. Scanning a QR with a physical phone still needs a handset check.</p>
+      </section>
+      <section id="android" aria-labelledby="android-title">
+        <h2 id="android-title">Pair Android for screen control over Wi-Fi</h2>
+        <ol>
+          <li>Download and extract the <a href="https://github.com/Genymobile/scrcpy/blob/master/doc/windows.md">official scrcpy Windows tools</a>. In <strong>Developer → Android screen</strong>, select the extracted folder containing <code>adb.exe</code> and <code>scrcpy.exe</code>.</li>
           <li>Connect your phone and PC to the same private Wi-Fi. Check your phone runs Android 11 or newer.</li>
           <li>Enable Developer options. On Samsung Galaxy, go to <strong>Settings → About phone → Software information → Build number</strong>. On Pixel, open <strong>Settings → About phone → Build number</strong>. Tap Build number seven times and complete the phone’s prompt.</li>
           <li>In Developer options, enable <strong>Wireless debugging</strong>. Approve the network prompt on your phone if it appears.</li>

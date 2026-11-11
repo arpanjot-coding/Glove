@@ -2,11 +2,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
-import { mkdtemp, mkdir, writeFile, readFile, readdir, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, readFile, readdir, rm, utimes } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
+import vm from 'node:vm';
 import { ShareService, MAX_UPLOAD_BYTES } from '../src/sharing/service.mjs';
+import { phonePage } from '../src/sharing/phone-page.mjs';
 
 async function fixture(t) {
   const root = await mkdtemp(path.join(os.tmpdir(), 'glove-sharing-test-'));
@@ -75,6 +77,89 @@ test('real loopback handoff lists and downloads exactly the explicitly added byt
   assert.equal(service.remove(snapshot.items[0].id).items.length, 0);
   assert.deepEqual(await readFile(selected), bytes, 'removing a share does not delete a file');
   assert.equal((await request(`${base}files/${snapshot.items[0].id}`)).status, 404);
+});
+
+test('an Android installer session exposes only its APK and accepts no phone uploads', async t => {
+  const { root, receiveDir, service } = await fixture(t);
+  const selected = path.join(root, 'personal.txt');
+  const apk = path.join(root, 'Glove-Companion.apk');
+  await writeFile(selected, 'Unrelated test file');
+  await writeFile(apk, 'Test APK bytes');
+  await service.addFiles([selected]);
+  await service.stop();
+
+  const installer = new ShareService({ receiveDir, allowUploads: false });
+  t.after(() => installer.stop());
+  const { urls: [base] } = await installer.start({ host: '127.0.0.1' });
+  await installer.addFiles([apk]);
+  assert.deepEqual((await request(base + 'api/items')).json().items.map(item => item.name), ['Glove-Companion.apk']);
+  assert.match((await request(base)).bytes.toString(), /aria-labelledby="send-heading" hidden/);
+  assert.equal((await upload(base, 'unexpected.txt', Buffer.from('test'))).status, 405);
+  assert.deepEqual(await readdir(receiveDir), []);
+  assert.deepEqual(service.snapshot().items.map(item => item.name), ['personal.txt']);
+});
+
+test('same-size edits require a fresh desktop selection and invalidate the old file link', async t => {
+  const { root, service, base } = await fixture(t);
+  const selected = path.join(root, 'same-size.txt');
+  await writeFile(selected, 'first');
+  const { items: [original] } = await service.addFiles([selected]);
+  await writeFile(selected, 'later');
+  await utimes(selected, new Date('2023-01-01'), new Date('2023-01-01'));
+  assert.equal((await request(`${base}files/${original.id}`)).status, 409);
+  const { items } = await service.addFiles([selected]);
+  assert.equal(items.length, 1);
+  assert.notEqual(items[0].id, original.id);
+  assert.equal((await request(`${base}files/${original.id}`)).status, 404);
+  assert.equal((await request(`${base}files/${items[0].id}`)).bytes.toString(), 'later');
+});
+
+test('phone batch retry skips completed uploads and ignores a stale file-list refresh', async () => {
+  function element() {
+    return {
+      children: [],
+      disabled: true,
+      events: {},
+      classList: { toggle() {} },
+      addEventListener(event, handler) { this.events[event] = handler; },
+      setAttribute() {},
+      replaceChildren() { this.children = []; },
+      append(...children) { this.children.push(...children); },
+    };
+  }
+  const elements = Object.fromEntries(['picker', 'send', 'status', 'selection', 'files', 'empty', 'count'].map(id => [id, element()]));
+  const { picker, send, status, selection, count } = elements;
+  const uploads = [];
+  let resolveRefresh;
+  const script = phonePage('test-nonce').split('<script nonce="test-nonce">')[1].split('</script>')[0];
+  vm.runInNewContext(script, {
+    document: { getElementById: id => elements[id], createElement: element, addEventListener() {} },
+    location: { href: 'http://localhost/s/test/' },
+    AbortSignal, URL,
+    setInterval() {},
+    fetch: async (url, options) => {
+      if (url.pathname.endsWith('/api/items')) return new Promise(resolve => { resolveRefresh = resolve; });
+      uploads.push(options.body.name);
+      if (uploads.length === 2) return { status: 500, ok: false, json: async () => ({ error: 'Test interrupted upload' }) };
+      const names = [...new Set(uploads)];
+      return { status: 201, ok: true, json: async () => ({
+        snapshot: { items: names.map(name => ({ id: name, name, size: 1, direction: 'from-phone' })) },
+      }) };
+    },
+  });
+  picker.files = [{ name: 'first', size: 1 }, { name: 'second', size: 1 }];
+  picker.events.change();
+  await send.events.click();
+  assert.match(status.textContent, /1 file\(s\) arrived/);
+  assert.match(selection.textContent, /^1 selected .*second/);
+  assert.equal(send.disabled, false);
+  resolveRefresh({ status: 200, ok: true, json: async () => ({ items: [] }) });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(count.textContent, '1');
+  await send.events.click();
+  assert.deepEqual(uploads, ['first', 'second', 'second']);
+  assert.equal(count.textContent, '2');
+  assert.equal(send.disabled, true);
 });
 
 test('raw uploads preserve bytes, sanitize traversal, avoid collisions, and notify desktop', async t => {

@@ -1,43 +1,23 @@
 // SPDX-License-Identifier: MIT
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { PhoneDesktop24Regular, Desktop24Regular, Folder24Regular, Settings24Regular, ArrowRight24Regular, Wifi124Regular, Checkmark24Regular, Copy24Regular, Add24Regular, Dismiss24Regular, Phone24Regular, ArrowSync24Regular, ArrowDownload24Regular } from '@fluentui/react-icons';
-import type { AppState } from './contracts';
+import type { AppState, PersonalState } from './contracts';
+import { Icon, Qr } from './controls';
+import { emptyPersonal, PersonalInbox } from './personal';
 import './theme.css';
 
-type Place = 'devices' | 'screen' | 'files' | 'settings';
-type IconName = 'devices' | 'screen' | 'files' | 'settings' | 'arrow' | 'wifi' | 'check' | 'copy' | 'plus' | 'folder' | 'close' | 'phone' | 'refresh' | 'download';
-const iconSet = {
-  devices: PhoneDesktop24Regular, screen: Desktop24Regular, files: Folder24Regular,
-  settings: Settings24Regular, arrow: ArrowRight24Regular, wifi: Wifi124Regular,
-  check: Checkmark24Regular, copy: Copy24Regular, plus: Add24Regular,
-  folder: Folder24Regular, close: Dismiss24Regular, phone: Phone24Regular,
-  refresh: ArrowSync24Regular, download: ArrowDownload24Regular
+type Place = 'devices' | 'notifications' | 'screen' | 'files' | 'developer' | 'settings';
+const navLabels: Record<Place, string> = {
+  devices: 'Devices', notifications: 'Notifications', screen: 'iPhone screen',
+  files: 'File sharing', developer: 'Developer', settings: 'Settings'
 };
-function Icon({ name, size = 20 }: { name: IconName; size?: number }) { const Glyph = iconSet[name]; return <Glyph width={size} height={size} style={{ fontSize: size }} aria-hidden="true"/>; }
+const personalPlaces = ['devices', 'files', 'notifications', 'screen'] as const;
 function phoneUrls(urls: string[]) { return urls.filter(value => { try { const host = new URL(value).hostname; return host !== 'localhost' && host !== '[::1]' && !host.startsWith('127.'); } catch { return false; } }); }
-const empty: AppState = { version: '0.1.0', settings: { toolsFolder: '', receiveFolder: '' }, toolsReady: false, android: { devices: [], mirroring: false, error: '', qr: { active: false, value: '', expiresAt: 0, status: 'idle' } }, sharing: { running: false, port: 0, urls: [], items: [] }, viewing: { running: false, port: 0, setupPort: 0, urls: [], setupUrls: [], fingerprint: '', connected: false } };
-function Qr({ value, label = 'Scan this connection QR code with your phone' }: { value: string; label?: string }) {
-  const [src, setSrc] = useState('');
-  const [failed, setFailed] = useState(false);
-  useEffect(() => {
-    let cancelled = false;
-    setSrc('');
-    setFailed(false);
-    if (value) {
-      import('qrcode')
-        .then(({ default: qr }) => qr.toDataURL(value, { width: 232, margin: 3, color: { dark: '#0f172a', light: '#ffffff' }, errorCorrectionLevel: 'M' }))
-        .then(image => { if (!cancelled) setSrc(image); })
-        .catch(() => { if (!cancelled) setFailed(true); });
-    }
-    return () => { cancelled = true; };
-  }, [value]);
-  return src ? <img className="qr" src={src} alt={label}/> : <div className="qr placeholder" role="status">{failed ? 'Could not generate QR code. Restart this session.' : 'Preparing QR code…'}</div>;
-}
+const empty: AppState = { version: '0.1.0', settings: { toolsFolder: '', receiveFolder: '' }, toolsReady: false, personal: emptyPersonal, android: { devices: [], mirroring: false, error: '', qr: { active: false, value: '', expiresAt: 0, status: 'idle' } }, sharing: { running: false, port: 0, urls: [], items: [] }, viewing: { running: false, port: 0, setupPort: 0, urls: [], setupUrls: [], fingerprint: '', connected: false } };
 function App() {
   const [state, setState] = useState<AppState>(empty);
   const [place, setPlace] = useState<Place>('devices');
-  const [phone, setPhone] = useState<'android' | 'iphone'>('android');
+  const [developerView, setDeveloperView] = useState<'screen' | 'mcp'>('screen');
   const [busy, setBusy] = useState('');
   const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(null);
   const [pairAddress, setPairAddress] = useState('');
@@ -49,24 +29,35 @@ function App() {
   const [viewStep, setViewStep] = useState<'setup' | 'screen'>('setup');
   const [shareUrl, setShareUrl] = useState('');
   const [screenUrl, setScreenUrl] = useState('');
-  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [incomingVideo, setIncomingVideo] = useState<{ sessionId: string; stream: MediaStream; peer: RTCPeerConnection } | null>(null);
   const [mcpDevice, setMcpDevice] = useState('');
   const [mcpFormat, setMcpFormat] = useState<'codex' | 'json'>('codex');
+  const mainScroll = useRef<HTMLElement>(null);
   const video = useRef<HTMLVideoElement>(null);
   const markedSession = useRef('');
+  const actions = useRef(new Set<string>());
+  const navigationVersion = useRef(0);
+  const stream = incomingVideo && incomingVideo.sessionId === state.viewing.sessionId ? incomingVideo.stream : null;
   const desktop = !!window.glove;
+  const installerSharing = state.installerSharing === true;
+  const personal = state.personal ?? emptyPersonal;
   const androidQr = state.android.qr || { active: false, value: '', expiresAt: 0, status: 'idle' };
   useEffect(() => { if (!androidQr.active) return; setNow(Date.now()); const timer = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(timer); }, [androidQr.active, androidQr.expiresAt]);
   useEffect(() => { if (androidQr.status === 'connected') setAndroidStep('devices'); }, [androidQr.status]);
   const run = async (action: string, data?: unknown, success?: string) => {
     if (!window.glove) { setNotice({ text: 'Open the Windows app to use phone connections and native file dialogs. This browser view is a UI preview.', error: true }); return; }
+    if (actions.current.has(action)) return;
+    actions.current.add(action);
     setBusy(action); setNotice(null);
     try {
       const value = await window.glove.call(action, data);
       if (success || typeof value === 'string') setNotice({ text: success || value, error: false });
       return value;
     } catch (error) { setNotice({ text: error instanceof Error ? error.message : String(error), error: true }); }
-    finally { setBusy(''); }
+    finally {
+      actions.current.delete(action);
+      setBusy(Array.from(actions.current).at(-1) ?? '');
+    }
   };
   useEffect(() => {
     if (!window.glove) return;
@@ -84,39 +75,62 @@ function App() {
   useEffect(() => { const list = phoneUrls(viewStep === 'setup' ? state.viewing.setupUrls : state.viewing.urls); if (!list.includes(screenUrl)) setScreenUrl(list[0] || ''); }, [state.viewing.urls.join('|'), state.viewing.setupUrls.join('|'), viewStep]);
   useEffect(() => {
     const { offer, sessionId, running } = state.viewing;
-    if (!running || !offer || !sessionId || !window.glove) { setStream(null); return; }
+    if (!running || !offer || !sessionId || !window.glove) return;
     let cancelled = false;
+    let finishGathering: (() => void) | undefined;
     const peer = new RTCPeerConnection({ iceServers: [] });
     markedSession.current = '';
-    peer.ontrack = event => { if (!cancelled) setStream(event.streams[0] || new MediaStream([event.track])); };
+    peer.ontrack = event => {
+      if (!cancelled) setIncomingVideo({ sessionId, stream: event.streams[0] || new MediaStream([event.track]), peer });
+    };
     peer.onconnectionstatechange = () => {
       if (!cancelled && ['failed', 'disconnected'].includes(peer.connectionState)) {
         markedSession.current = '';
         window.glove?.call('viewingConnected', { sessionId, connected: false }).catch(() => {});
-        setNotice({ text: 'The iPhone screen connection was interrupted. Stop sharing on the phone and start again.', error: true });
+        if (peer.connectionState === 'failed') {
+          setNotice({ text: 'The iPhone screen connection was interrupted. Stop sharing on the phone and start again.', error: true });
+        }
       }
     };
     (async () => {
       await peer.setRemoteDescription(offer);
-      await peer.setLocalDescription(await peer.createAnswer());
+      if (cancelled) return;
+      const answer = await peer.createAnswer();
+      if (cancelled) return;
+      await peer.setLocalDescription(answer);
+      if (cancelled) return;
       await new Promise<void>(resolve => {
         if (peer.iceGatheringState === 'complete') return resolve();
-        const timer = setTimeout(resolve, 6000);
-        peer.addEventListener('icegatheringstatechange', () => { if (peer.iceGatheringState === 'complete') { clearTimeout(timer); resolve(); } });
+        const onGathering = () => { if (peer.iceGatheringState === 'complete') finish(); };
+        const finish = () => {
+          clearTimeout(timer);
+          peer.removeEventListener('icegatheringstatechange', onGathering);
+          finishGathering = undefined;
+          resolve();
+        };
+        const timer = setTimeout(finish, 6000);
+        finishGathering = finish;
+        peer.addEventListener('icegatheringstatechange', onGathering);
       });
       if (!cancelled) await window.glove!.call('answerViewing', { sessionId, sdp: peer.localDescription?.toJSON() });
     })().catch(error => { if (!cancelled) setNotice({ text: `Screen connection failed: ${error.message}`, error: true }); });
-    return () => { cancelled = true; peer.close(); setStream(null); };
+    return () => {
+      cancelled = true;
+      finishGathering?.();
+      peer.close();
+      setIncomingVideo(current => current?.peer === peer ? null : current);
+    };
   }, [state.viewing.running, state.viewing.sessionId, state.viewing.offer?.sdp]);
   useEffect(() => {
     const element = video.current;
-    if (!element || !stream) return;
+    if (!element || !incomingVideo || incomingVideo.sessionId !== state.viewing.sessionId) return;
+    const { peer, sessionId, stream } = incomingVideo;
     element.srcObject = stream;
     element.play().catch(() => {});
     let cancelled = false;
     const confirm = () => {
-      const sessionId = state.viewing.sessionId;
-      if (!cancelled && sessionId && markedSession.current !== sessionId && element.videoWidth > 0 && element.readyState >= 2) {
+      if (!cancelled && peer.connectionState === 'connected' && element.srcObject === stream &&
+          markedSession.current !== sessionId && element.videoWidth > 0 && element.readyState >= 2) {
         markedSession.current = sessionId;
         window.glove?.call('viewingConnected', { sessionId, connected: true }).catch(() => {});
       }
@@ -128,8 +142,17 @@ function App() {
       frame = element.requestVideoFrameCallback(next);
     }
     return () => { cancelled = true; if (frame) element.cancelVideoFrameCallback(frame); element.removeEventListener('loadeddata', confirm); element.srcObject = null; };
-  }, [stream, place, phone, state.viewing.sessionId]);
-  const goScreen = (kind: 'android' | 'iphone') => { setPhone(kind); setPlace('screen'); setNotice(null); };
+  }, [incomingVideo, place, state.viewing.sessionId]);
+  const navigate = (next: Place) => { navigationVersion.current++; setPlace(next); setNotice(null); mainScroll.current?.scrollTo(0, 0); };
+  const shareInstaller = async () => {
+    const origin = navigationVersion.current;
+    if (!await run('shareCompanionApk') || navigationVersion.current !== origin) return;
+    navigate('files');
+  };
+  const sendPersonalReply = async (id: string, text: string) => {
+    const updated = await run('sendPersonalReply', { id, text }) as PersonalState | undefined;
+    return updated?.reply?.id;
+  };
   const readyDevices = state.android.devices.filter(device => device.status === 'device');
   const disabled = !!busy;
   const copy = (text: string) => run('copyText', { text }, 'Link copied.');
@@ -145,8 +168,15 @@ function App() {
   </div>;
   const windowAction = (action: string, data?: unknown) => window.glove?.call(action, data).catch(error => setNotice({ text: error.message, error: true }));
   const startAndroidQr = async () => { setAndroidStep('scan'); await run('startAndroidQr'); };
-  const navLabels: Record<Place, string> = { devices: 'Devices', screen: 'Screen view', files: 'File sharing', settings: 'Settings' };
-  const status = readyDevices.length ? readyDevices.length + ' Android device' + (readyDevices.length > 1 ? 's' : '') + ' connected' : state.viewing.connected ? 'Receiving iPhone screen' : 'No phone connected';
+  const connected = place === 'developer' ? readyDevices.length > 0 : personal.device?.online || state.viewing.connected;
+  const status = place === 'developer'
+    ? readyDevices.length ? `${readyDevices.length} authorized Android ${readyDevices.length === 1 ? 'device' : 'devices'}` : 'No Android test device connected'
+    : personal.device?.online ? `${personal.device.name} connected` : state.viewing.connected ? 'Receiving iPhone screen' : 'No phone connected';
+  const navButton = (key: Place) => <button className={'nav-item ' + (place === key ? 'selected' : '')}
+    aria-current={place === key ? 'page' : undefined} onClick={() => navigate(key)} key={key}>
+    <Icon name={key}/><span>{navLabels[key]}</span>
+    {key === 'files' && state.sharing.running && <span className="nav-dot" aria-label="Sharing is on"/>}
+  </button>;
   return <div className="app-shell">
     <div className="app-titlebar">
       <div className="titlebar-identity"><img src={new URL('./brand.svg', import.meta.url).href} alt=""/><span>Glove</span></div>
@@ -158,41 +188,50 @@ function App() {
       </div>
     </div>
     <aside className="sidebar">
-      <div className="sidebar-heading">PHONE WORKSPACE</div>
-      <nav aria-label="Main navigation">{(['devices', 'screen', 'files', 'settings'] as Place[]).map(key => <button className={'nav-item ' + (place === key ? 'selected' : '')} aria-current={place === key ? 'page' : undefined} onClick={() => { setPlace(key); setNotice(null); }} key={key}><Icon name={key}/><span>{navLabels[key]}</span>{key === 'files' && state.sharing.running && <span className="nav-dot" aria-label="Sharing is on"/>}</button>)}</nav>
+      <div className="sidebar-heading">PERSONAL</div>
+      <nav aria-label="Personal">{personalPlaces.map(navButton)}</nav>
+      <nav aria-label="Advanced and app settings" className="sidebar-tools">{navButton('developer')}{navButton('settings')}</nav>
       <div className="sidebar-bottom"><div className="sidebar-network"><Icon name="wifi" size={18}/><strong>Local connection</strong></div><p>Keep your phone and PC<br/>on the same Wi-Fi.</p><div className="sidebar-version">Glove for Windows <span>v{state.version}</span></div></div>
     </aside>
     <div className="workspace">
-      <main>
+      <main ref={mainScroll}>
         {!desktop && <div className="preview-note"><Icon name="screen" size={18}/><span>UI preview. Open the Windows app to pair a phone and transfer files.</span></div>}
         {notice && <div className={'notice ' + (notice.error ? 'error' : 'success')} role={notice.error ? 'alert' : 'status'}><span>{notice.text}</span><button className="icon-button" aria-label="Dismiss message" onClick={() => setNotice(null)}><Icon name="close" size={17}/></button></div>}
 
         {place === 'devices' && <>
-          <div className="page-heading"><div><div className="eyebrow">DEVICES</div><h1>Connect your phone</h1><p>View your screen or move files between your phone and PC.</p></div><span className="badge neutral"><Icon name="wifi" size={14}/> Same Wi-Fi</span></div>
+          <div className="page-heading"><div><div className="eyebrow">PERSONAL</div><h1>Connect your phone</h1><p>Share files with your PC or see your Android notifications on Windows.</p></div><span className="badge neutral"><Icon name="wifi" size={14}/> Same Wi-Fi</span></div>
           <div className="device-grid">
             <section className="device-card">
-              <div className="device-card-top"><span className="platform-icon"><Icon name="phone" size={27}/></span><span className="badge">Android 11+</span></div>
-              <h2>Android</h2><p>View and control your phone in a separate window.</p>
-              <ul className="capability-list"><li><Icon name="check" size={16}/> Wireless pairing with a QR code</li><li><Icon name="check" size={16}/> Mouse and keyboard control via scrcpy</li><li><Icon name="check" size={16}/> Send and receive files in your browser</li></ul>
-              <button className="button primary full" onClick={() => goScreen('android')}>Set up Android<Icon name="arrow" size={18}/></button>
-              <small>Requires Developer options and separate scrcpy tools.</small>
+              <div className="device-card-top"><span className="platform-icon"><Icon name="files" size={27}/></span><span className="badge neutral">Android & iPhone</span></div>
+              <h2>Send and receive files</h2><p>Move files between Windows and your phone’s browser.</p>
+              <ul className="capability-list"><li><Icon name="check" size={16}/> Scan with your phone’s camera</li><li><Icon name="check" size={16}/> Transfer in both directions over Wi-Fi</li></ul>
+              <button className="button primary full" onClick={() => navigate('files')}>Open file sharing<Icon name="arrow" size={18}/></button>
+              <small>Works in your browser without installing a phone app.</small>
             </section>
             <section className="device-card">
-              <div className="device-card-top"><span className="platform-icon iphone"><Icon name="phone" size={27}/></span><span className="badge neutral">iPhone</span></div>
-              <h2>iPhone</h2><p>Share your screen from Safari on iOS 27 or later.</p>
-              <ul className="capability-list"><li><Icon name="check" size={16}/> Live screen viewing on this PC</li><li><Icon name="check" size={16}/> Secure Safari connection with certificate setup</li><li><Icon name="check" size={16}/> Browser file sharing on other iOS versions</li></ul>
-              <button className="button secondary full" onClick={() => goScreen('iphone')}>Set up iPhone<Icon name="arrow" size={18}/></button>
-              <small>Screen view only. Remote control and audio are unavailable.</small>
+              <div className="device-card-top"><span className="platform-icon iphone"><Icon name="notifications" size={27}/></span><span className="badge">Android 11+</span></div>
+              <h2>Android notifications</h2><p>Read notifications from apps you choose and send quick replies when available.</p>
+              <ul className="capability-list"><li><Icon name="check" size={16}/> Scan a QR with Glove Companion</li><li><Icon name="check" size={16}/> Developer options can stay off</li></ul>
+              <button className="button secondary full" onClick={() => navigate('notifications')}>{personal.device ? 'Open notifications' : 'Set up notifications'}<Icon name="arrow" size={18}/></button>
+              <small>{personal.device ? personal.device.name + (personal.device.online ? ' connected' : ' paired') : 'Requires Glove Companion on your Android phone.'}</small>
             </section>
           </div>
-          <section className="handoff-strip"><span className="tile-icon"><Icon name="files" size={23}/></span><div><h3>Just need to send a file?</h3><p>Open a local link in any phone browser. No screen setup required.</p></div><button className="button secondary" onClick={() => setPlace('files')}>Open file sharing<Icon name="arrow" size={16}/></button></section>
+          <section className="handoff-strip"><span className="tile-icon"><Icon name="screen" size={23}/></span><div><h3>iPhone screen preview</h3><p>Try local screen viewing with a compatible Safari screen picker.</p></div><button className="button secondary" onClick={() => navigate('screen')}>Open screen setup<Icon name="arrow" size={16}/></button></section>
           <div className="connection-note"><Icon name="wifi" size={17}/><span>Use a trusted private network. Guest Wi-Fi, VPNs and Windows Firewall may block phone connections.</span></div>
         </>}
 
-        {place === 'screen' && <>
-          <div className="page-heading"><div><div className="eyebrow">SCREEN VIEW</div><h1>{phone === 'android' ? 'Connect your Android' : 'View your iPhone screen'}</h1><p>{phone === 'android' ? 'Prepare your phone, pair over Wi-Fi, then open its screen.' : 'Share from Safari over a trusted local connection.'}</p></div></div>
-          <div className="platform-tabs" aria-label="Phone platform"><button aria-pressed={phone === 'android'} className={phone === 'android' ? 'active' : ''} onClick={() => setPhone('android')}><Icon name="phone" size={17}/>Android</button><button aria-pressed={phone === 'iphone'} className={phone === 'iphone' ? 'active' : ''} onClick={() => setPhone('iphone')}><Icon name="phone" size={17}/>iPhone</button></div>
-          {phone === 'android' ? <>
+        {place === 'notifications' && <PersonalInbox state={personal} busy={disabled} apkReady={!!state.companionApkReady}
+          run={run} sendReply={sendPersonalReply} shareInstaller={shareInstaller}/>}
+
+        {place === 'developer' && <>
+          <div className="page-heading"><div><div className="eyebrow">DEVELOPER</div><h1>Android development tools</h1><p>Connect an authorized test device for screen control or MCP testing.</p></div></div>
+          <div className="platform-tabs" aria-label="Developer tools">
+            <button aria-pressed={developerView === 'screen'} className={developerView === 'screen' ? 'active' : ''} onClick={() => setDeveloperView('screen')}><Icon name="screen" size={17}/>Android screen</button>
+            <button aria-pressed={developerView === 'mcp'} className={developerView === 'mcp' ? 'active' : ''} onClick={() => setDeveloperView('mcp')}><Icon name="developer" size={17}/>MCP testing</button>
+          </div>
+        </>}
+
+        {place === 'developer' && developerView === 'screen' && <>
             {!state.toolsReady ? <section className="panel tools-gate">
               <span className="gate-icon"><Icon name="folder" size={30}/></span>
               <div><span className="badge">GET STARTED</span><h2>Install the Android tools first</h2><p>Glove uses the official scrcpy Windows tools to connect and control your phone. Download the archive, extract it, then select the folder containing <code>adb.exe</code> and <code>scrcpy.exe</code>.</p><div className="button-row"><button className="button primary" disabled={disabled} onClick={() => run('chooseTools')}>Choose tools folder<Icon name="folder" size={17}/></button><button className="text-button" onClick={() => run('openToolGuide')}>Open download guide<Icon name="arrow" size={16}/></button></div><p className="helper">Android 11 or later is required for wireless pairing. Both devices must use the same Wi-Fi.</p></div>
@@ -212,7 +251,7 @@ function App() {
                   <li>Turn on <strong>Wireless debugging</strong>. Allow it for your current Wi-Fi if prompted.</li>
                   <li>Open <strong>Wireless debugging → Pair device with QR code</strong>. Leave that scanner open.</li>
                 </ol></div></div>
-                <div className="panel-bottom"><p className="helper"><Icon name="phone" size={17}/> Use the scanner inside Wireless debugging. Your normal camera cannot pair Android.</p><button className="button primary" disabled={disabled} onClick={startAndroidQr}>{busy === 'startAndroidQr' ? 'Starting pairing…' : 'Phone ready — show QR code'}<Icon name="arrow" size={17}/></button></div>
+                <div className="panel-bottom"><p className="helper"><Icon name="phone" size={17}/> Use the scanner inside Wireless debugging to pair a test device.</p><button className="button primary" disabled={disabled} onClick={startAndroidQr}>{busy === 'startAndroidQr' ? 'Starting pairing…' : 'Phone ready — show QR code'}<Icon name="arrow" size={17}/></button></div>
               </section>}
               {androidStep === 'scan' && <section className="panel pairing-panel">
                 <div className="pairing-copy"><span className="badge">WIRELESS PAIRING</span><h2>Scan from Wireless debugging</h2><p>On your phone, open <strong>Settings → Developer options → Wireless debugging → Pair device with QR code</strong>.</p><div className="inline-callout"><Icon name="phone" size={20}/><p>Use that pairing scanner to scan this code. Your normal camera app will not pair the device.</p></div><p className="helper">Keep your phone unlocked and both devices on the same Wi-Fi. Glove connects after pairing succeeds.</p>{androidQr.error && <p className="error-text" role="alert">{androidQr.error}</p>}<div className="button-row">{androidQr.active ? <button className="button secondary" disabled={disabled} onClick={() => run('stopAndroidQr')}>Cancel pairing</button> : <button className="button primary" disabled={disabled} onClick={startAndroidQr}>{busy === 'startAndroidQr' ? 'Starting…' : androidQr.status === 'expired' || androidQr.status === 'error' || androidQr.status === 'cancelled' ? 'Generate new QR code' : 'Show pairing QR code'}<Icon name="refresh" size={16}/></button>}<button className="text-button" onClick={() => setAndroidStep('prepare')}>Phone setup guide</button></div></div>
@@ -225,9 +264,20 @@ function App() {
               </section>}
               {state.android.error && <div className="notice error" role="alert">{state.android.error}</div>}
               <details className="advanced-panel"><summary>Manual pairing & connection <span>Advanced fallback</span></summary><div className="advanced-content"><div><h3>Pair with a six-digit code</h3><p className="helper">On your phone: Wireless debugging → Pair device with pairing code. Use the address and code from that dialog.</p><form onSubmit={e => { e.preventDefault(); run('pairAndroid', { address: pairAddress, code: pairCode }).then(result => { if (result) setPairCode(''); }); }}><div className="form-row"><label>Pairing address<input autoComplete="off" value={pairAddress} onChange={e => setPairAddress(e.target.value)} placeholder="192.168.1.5:37123" required/></label><label className="code-field">Pairing code<input inputMode="numeric" autoComplete="off" type="password" maxLength={6} pattern="[0-9]{6}" value={pairCode} onChange={e => setPairCode(e.target.value)} placeholder="6 digits" required/></label></div><button className="button secondary" disabled={disabled}>{busy === 'pairAndroid' ? 'Pairing…' : 'Pair phone'}</button></form></div><div><h3>Connect an already paired phone</h3><p className="helper">Use the IP address and port on the main Wireless debugging screen. This port differs from the pairing port.</p><form onSubmit={e => { e.preventDefault(); run('connectAndroid', { address }).then(result => { if (result) setAndroidStep('devices'); }); }}><label>Connection address<input autoComplete="off" value={address} onChange={e => setAddress(e.target.value)} placeholder="192.168.1.5:39561" required/></label><button className="button secondary" disabled={disabled}>{busy === 'connectAndroid' ? 'Connecting…' : 'Connect phone'}<Icon name="wifi" size={16}/></button></form></div></div></details>
+              <details className="advanced-panel">
+                <summary>Android tools folder</summary>
+                <div className="tool-folder-content">
+                  <p className="helper">Glove uses adb.exe and scrcpy.exe from this folder.</p>
+                  <div className="path-field"><Icon name="folder" size={18}/><code>{state.settings.toolsFolder}</code></div>
+                  <button className="button secondary small" disabled={disabled} onClick={() => run('chooseTools')}>Change tools folder</button>
+                </div>
+              </details>
             </>}
             <div className="connection-note"><Icon name="wifi" size={17}/><span>Android 11+ · Same private Wi-Fi · Keep Wireless debugging enabled while connecting.</span></div>
-          </> : <>
+        </>}
+
+        {place === 'screen' && <>
+            <div className="page-heading"><div><div className="eyebrow">PERSONAL</div><h1>View your iPhone screen</h1><p>Try the Safari screen sharing preview over a trusted local connection.</p></div></div>
             {!state.viewing.running ? <section className="panel iphone-welcome"><span className="gate-icon"><Icon name="screen" size={32}/></span><div><span className="badge">SAFARI · iOS 27+</span><h2>Set up a secure screen connection</h2><p>Glove creates a local certificate for this PC. Download its profile on your iPhone, verify the actual certificate fingerprint, then enable trust before sharing your screen in Safari.</p><button className="button primary" disabled={disabled} onClick={() => { setViewStep('setup'); run('startViewing'); }}>{busy === 'startViewing' ? 'Preparing secure session…' : 'Start iPhone setup'}<Icon name="arrow" size={17}/></button><p className="helper">View only · No screen audio · Keep Safari open<br/>Other iOS versions can use <button className="inline-link" onClick={() => setPlace('files')}>file sharing</button>.</p></div></section> : <div className="iphone-grid">
               <section className="panel iphone-connection"><div className="panel-heading"><h2>Connect from Safari</h2><span className={'status-pill ' + (state.viewing.connected ? 'live' : '')}><i/>{state.viewing.connected ? 'Receiving screen' : 'Waiting for iPhone'}</span></div>
                 <div className="sub-tabs"><button className={viewStep === 'setup' ? 'active' : ''} onClick={() => setViewStep('setup')}>1. Certificate setup</button><button className={viewStep === 'screen' ? 'active' : ''} onClick={() => setViewStep('screen')}>2. Share screen</button></div>
@@ -238,26 +288,39 @@ function App() {
               <section className="screen-stage" aria-label="iPhone screen viewer"><div className="screen-stage-bar"><Icon name="screen" size={17}/><span>iPhone screen</span><span className={'screen-live ' + (state.viewing.connected ? 'active' : '')}>{state.viewing.connected ? 'LIVE' : 'WAITING'}</span></div><div className="screen-stage-content">{stream ? <video ref={video} autoPlay muted playsInline aria-label="Live iPhone screen"/> : <div><Icon name="phone" size={46}/><h3>Waiting for your screen</h3><p>Start screen sharing in Safari.<br/>Your live picture appears here.</p></div>}</div></section>
             </div>}
             <div className="connection-note"><Icon name="wifi" size={17}/><span>Same private Wi-Fi · Safari on iOS 27+ · Windows Firewall must allow the local connection.</span></div>
-          </>}
         </>}
 
         {place === 'files' && <>
           <div className="page-heading"><div><div className="eyebrow">FILE SHARING</div><h1>Send files between devices</h1><p>Open a local link on your phone to send or download files.</p></div>{state.sharing.running ? <button className="button secondary" disabled={disabled} onClick={() => run('stopSharing')}>Stop sharing</button> : <button className="button primary" disabled={disabled} onClick={() => run('startSharing')}>{busy === 'startSharing' ? 'Starting…' : 'Start file sharing'}<Icon name="wifi" size={17}/></button>}</div>
+          {installerSharing && state.sharing.running && <section className="panel installer-callout">
+            <div>
+              <h2>Install Glove Companion</h2>
+              <p>Scan the file sharing code below with your Android camera. Open the link and download and install the APK. Return to Notifications to show the pairing QR.</p>
+            </div>
+              <button className="button secondary small" disabled={disabled} onClick={async () => {
+                const origin = navigationVersion.current;
+                if (await run('stopSharing') && navigationVersion.current === origin) navigate('notifications');
+              }}>Continue to pairing<Icon name="arrow" size={16}/></button>
+          </section>}
           <div className="files-layout">
             <section className="panel connection-panel"><div className="panel-heading"><h2>Phone connection</h2><span className={'status-pill ' + (state.sharing.running ? 'live' : '')}><i/>{state.sharing.running ? 'Sharing on' : 'Off'}</span></div>{state.sharing.running ? <>{shareUrls.length ? <><Qr value={shareUrl}/><h3>Scan to open on your phone</h3><p>Use your camera or paste this link into your phone’s browser.</p>{linkBox(shareUrl, shareUrls)}</> : noNetwork}<div className="privacy-note">Use trusted private Wi-Fi. Transfers use unencrypted local HTTP. Anyone with this session link can access the shared files.</div></> : <div className="connect-empty"><span className="empty-icon"><Icon name="wifi" size={32}/></span><h3>Start a sharing session</h3><p>A QR code and local link will appear here. Works in Android and iPhone browsers.</p></div>}</section>
-            <section className="panel file-list-panel"><div className="panel-heading"><div><h2>Shared files <span className="item-count">{state.sharing.items.length}</span></h2><p>Add files from this PC, or upload from your phone.</p></div><button className="button secondary small" disabled={disabled || !state.sharing.running} onClick={() => run('addFiles')}><Icon name="plus" size={16}/>Add files</button></div>{state.sharing.items.length ? <div className="file-list">{state.sharing.items.map(item => <div className="file-row" key={item.id}><span className="tile-icon"><Icon name={item.direction === 'from-phone' ? 'download' : 'files'} size={21}/></span><div className="file-info"><strong title={item.name}>{item.name}</strong><small>{formatSize(item.size)}<span>·</span>{item.direction === 'from-phone' ? 'Received from phone' : 'Available to phone'}</small></div><button className="icon-button" aria-label={'Remove ' + item.name + ' from sharing'} disabled={disabled} onClick={() => run('removeFile', { id: item.id })}><Icon name="close" size={17}/></button></div>)}</div> : <div className="empty-state file-empty"><span className="empty-icon"><Icon name="files" size={33}/></span><h3>No shared files yet</h3><p>{state.sharing.running ? 'Add a file from this PC, or send one from the phone connection page.' : 'Start file sharing to add files and connect your phone.'}</p></div>}<div className="file-footer"><span>Removing a received file here keeps it on your PC.</span><button className="text-button" onClick={() => run('openReceiveFolder')}><Icon name="folder" size={16}/>Open receive folder</button></div></section>
+            <section className="panel file-list-panel"><div className="panel-heading"><div><h2>Shared files <span className="item-count">{state.sharing.items.length}</span></h2><p>{installerSharing ? 'Download this APK to install the companion.' : 'Add files from this PC, or upload from your phone.'}</p></div>{!installerSharing && <button className="button secondary small" disabled={disabled || !state.sharing.running} onClick={() => run('addFiles')}><Icon name="plus" size={16}/>Add files</button>}</div>{state.sharing.items.length ? <div className="file-list">{state.sharing.items.map(item => <div className="file-row" key={item.id}><span className="tile-icon"><Icon name={item.direction === 'from-phone' ? 'download' : 'files'} size={21}/></span><div className="file-info"><strong title={item.name}>{item.name}</strong><small>{formatSize(item.size)}<span>·</span>{item.direction === 'from-phone' ? 'Received from phone' : 'Available to phone'}</small></div>{!installerSharing && <button className="icon-button" aria-label={'Remove ' + item.name + ' from sharing'} disabled={disabled} onClick={() => run('removeFile', { id: item.id })}><Icon name="close" size={17}/></button>}</div>)}</div> : <div className="empty-state file-empty"><span className="empty-icon"><Icon name="files" size={33}/></span><h3>No shared files yet</h3><p>{state.sharing.running ? 'Add a file from this PC, or send one from the phone connection page.' : 'Start file sharing to add files and connect your phone.'}</p></div>}<div className="file-footer"><span>Removing a received file here keeps it on your PC.</span><button className="text-button" onClick={() => run('openReceiveFolder')}><Icon name="folder" size={16}/>Open receive folder</button></div></section>
           </div>
         </>}
 
         {place === 'settings' && <>
-          <div className="page-heading"><div><div className="eyebrow">SETTINGS</div><h1>Tools & storage</h1><p>Choose your Android tools and where incoming files are saved.</p></div></div>
-          <section className="panel settings-panel"><span className="setting-icon"><Icon name="phone" size={25}/></span><div className="setting-body"><div className="panel-heading"><h2>Android screen tools</h2><span className={'status-pill ' + (state.toolsReady ? 'live' : '')}><i/>{state.toolsReady ? 'Ready' : 'Setup required'}</span></div><p>Download and extract the official Windows scrcpy archive. Choose the folder containing <code>adb.exe</code> and <code>scrcpy.exe</code>.</p><div className="path-field"><Icon name="folder" size={18}/><code>{state.settings.toolsFolder || 'No tools folder selected'}</code></div><div className="button-row"><button className="button primary small" disabled={disabled} onClick={() => run('chooseTools')}>Choose tools folder</button><button className="text-button" onClick={() => run('openToolGuide')}>Open download guide<Icon name="arrow" size={16}/></button></div><p className="helper">Tools are installed separately. Wireless pairing requires Android 11+ and Wireless debugging.</p></div></section>
+          <div className="page-heading"><div><div className="eyebrow">SETTINGS</div><h1>Storage</h1><p>Choose where incoming files are saved.</p></div></div>
           <section className="panel settings-panel"><span className="setting-icon"><Icon name="folder" size={25}/></span><div className="setting-body"><h2>Receive folder</h2><p>Files uploaded from your phone are saved here. They remain on your PC after sharing stops.</p><div className="path-field"><Icon name="folder" size={18}/><code>{state.settings.receiveFolder || 'Downloads → Glove'}</code></div><div className="button-row"><button className="button secondary small" disabled={disabled || state.sharing.running} onClick={() => run('chooseReceiveFolder')}>Change folder</button><button className="text-button" onClick={() => run('openReceiveFolder')}>Open folder<Icon name="arrow" size={16}/></button></div>{state.sharing.running && <p className="helper">Stop file sharing before changing the receive folder.</p>}</div></section>
+          <div className="about-row"><img src={new URL('./brand.svg', import.meta.url).href} alt=""/><div><strong>Glove for Windows <span>v{state.version}</span></strong><p>Original application code uses the MIT License. Third-party notices are included with the app.</p></div></div>
+        </>}
+
+        {place === 'developer' && developerView === 'mcp' && <>
           <section className="panel settings-panel">
-            <span className="setting-icon"><Icon name="devices" size={25}/></span>
+            <span className="setting-icon"><Icon name="developer" size={25}/></span>
             <div className="setting-body">
-              <div className="panel-heading"><h2>Developer tools</h2></div>
+              <div className="panel-heading"><h2>Connect your MCP client</h2></div>
               <p>Give your MCP client read-only access to a connected Android screen. The client needs Node.js 24 or newer on this PC.</p>
+              {!readyDevices.length && <p className="helper">Connect a phone or emulator first. <button className="inline-link" onClick={() => setDeveloperView('screen')}>Open Android screen setup</button></p>}
               <div className="mcp-fields">
                 <label>Android device
                   <select value={mcpDevice} onChange={event => setMcpDevice(event.target.value)}>
@@ -285,10 +348,9 @@ function App() {
               <p className="helper">Paste the configuration into the client on this PC.</p>
             </div>
           </section>
-          <div className="about-row"><img src={new URL('./brand.svg', import.meta.url).href} alt=""/><div><strong>Glove for Windows <span>v{state.version}</span></strong><p>Original application code: MIT License. Third-party notices are included with the app.</p></div></div>
         </>}
       </main>
-      <footer className="statusbar"><span><i className={readyDevices.length || state.viewing.connected ? 'connected' : ''}/>{status}</span><span>{state.sharing.running ? 'File sharing is on' : 'Local network workspace'}</span></footer>
+      <footer className="statusbar"><span><i className={connected ? 'connected' : ''}/>{status}</span><span>{state.sharing.running ? 'File sharing is on' : 'Local network workspace'}</span></footer>
     </div>
   </div>;
 }

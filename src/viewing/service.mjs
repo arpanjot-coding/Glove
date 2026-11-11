@@ -6,14 +6,29 @@ import {setupPage, screenPage, screenScript} from './pages.mjs';
 
 const token = () => randomBytes(32).toString('hex');
 const MAX_BODY = 256 * 1024;
+const MAX_RETIRED_SESSIONS = 128;
 const CSP = "default-src 'none'; style-src 'unsafe-inline'; script-src 'self'; connect-src 'self'; media-src 'self' blob:; base-uri 'none'; frame-ancestors 'none'; form-action 'self'";
 const sdpIs = value => typeof value === 'string' && value.length > 0 && value.length <= MAX_BODY - 200 && value.startsWith('v=0') && !value.includes('\0');
 const sessionIs = value => typeof value === 'string' && /^[a-zA-Z0-9_-]{16,128}$/.test(value);
+const serverSockets = new WeakMap();
+function trackSockets(server) {
+  const sockets = new Set();
+  serverSockets.set(server,sockets);
+  server.on('connection',socket => {
+    sockets.add(socket);
+    socket.once('close',()=>sockets.delete(socket));
+  });
+}
 const listen = (server, port, host) => new Promise((resolve,reject) => {
   server.once('error',reject);
   server.listen(port,host,() => {server.removeListener('error',reject);resolve(server.address().port);});
 });
-const close = server => new Promise(resolve => {if (!server) return resolve();server.close(resolve);server.closeAllConnections?.();});
+const close = server => new Promise(resolve => {
+  if (!server) return resolve();
+  server.close(resolve);
+  // HTTP's closeAllConnections does not include sockets still negotiating TLS.
+  for (const socket of serverSockets.get(server)) socket.destroy();
+});
 
 function ipsFor(host) {
   const ips = Object.values(os.networkInterfaces()).flat().filter(item => item?.family === 'IPv4' && !item.internal).map(item => item.address);
@@ -59,12 +74,16 @@ export class ViewService {
     this.leaseMs = leaseMs;
     this.sessionLastSeen = 0;
     this.leaseTimer = null;
+    this.retiredSessions = new Set();
     this.state = {running:false,port:null,setupPort:null,urls:[],setupUrls:[],fingerprint:null,rootName:null,offer:null,sessionId:null,connected:false,status:'stopped'};
     this.answerValue = null;
   }
   snapshot() {return structuredClone(this.state);}
-  changed() {this.onChange(this.snapshot());}
+  changed() {
+    try {this.onChange(this.snapshot());} catch { /* A desktop observer does not own the session. */ }
+  }
   async start({host='0.0.0.0',port=0,setupPort=0}={}) {
+    if (this.stopPromise) await this.stopPromise;
     if (this.state.running) return this.snapshot();
     if (this.startPromise) return this.startPromise;
     this.startPromise = this.startServers({host,port,setupPort});
@@ -81,10 +100,10 @@ export class ViewService {
     this.setupToken = token();
     this.profile = configurationProfile(certs);
     this.secureHosts = new Set(ips);
-    this.setupHosts = new Set(ips);
     const secure = https.createServer({cert:certs.cert,key:certs.key,minVersion:'TLSv1.2',handshakeTimeout:10000,maxHeaderSize:8192},(req,res) => this.handleSecure(req,res).catch(error => this.failure(res,error)));
     const setup = http.createServer({maxHeaderSize:8192},(req,res) => this.handleSetup(req,res).catch(error => this.failure(res,error)));
     for (const server of [secure,setup]) {
+      trackSockets(server);
       server.requestTimeout = 20000;
       server.headersTimeout = 15000;
       server.maxHeadersCount = 40;
@@ -111,6 +130,7 @@ export class ViewService {
     catch {return false;}
   }
   async handleSetup(request,response) {
+    if (this.stopPromise || !this.state.running) return send(response,410,{error:'This screen session ended.'});
     if (!this.validHost(request,this.state.setupPort)) return send(response,403,{error:'Unrecognized local address.'});
     const url = new URL(request.url,`http://${request.headers.host}`);
     const base = `/setup/${this.setupToken}/`;
@@ -123,10 +143,12 @@ export class ViewService {
     return send(response,404,{error:'Not found.'});
   }
   async handleSecure(request,response) {
+    if (this.stopPromise || !this.state.running) return send(response,410,{error:'This screen session ended.'});
     if (!this.validHost(request,this.state.port)) return send(response,403,{error:'Unrecognized local address.'});
     const origin = `https://${request.headers.host}`;
     const url = new URL(request.url,origin);
-    const base = `/s/${this.screenToken}/`;
+    const screenToken = this.screenToken;
+    const base = `/s/${screenToken}/`;
     if (!url.pathname.startsWith(base)) return send(response,404,{error:'Not found.'});
     const route = url.pathname.slice(base.length);
     if (request.method === 'GET' && route === '') return send(response,200,screenPage({scriptPath:`${base}screen.js`}), 'text/html; charset=utf-8');
@@ -144,10 +166,12 @@ export class ViewService {
     if (request.method !== 'POST' || !['offer','stop'].includes(route)) return send(response,404,{error:'Not found.'});
     if (request.headers.origin !== origin) return send(response,403,{error:'A same-origin screen page is required.'});
     const body = await json(request);
+    if (this.stopPromise || !this.state.running || screenToken !== this.screenToken) return send(response,410,{error:'This screen session ended.'});
     if (!body || typeof body !== 'object' || !sessionIs(body.sessionId)) return send(response,400,{error:'Invalid session.'});
     this.expireSession();
     if (route === 'offer') {
       if (!sdpIs(body.sdp)) return send(response,400,{error:'Invalid screen offer.'});
+      if (this.retiredSessions.has(body.sessionId)) return send(response,410,{error:'This screen session already ended. Tap Start to reconnect.'});
       if (this.state.sessionId && this.state.sessionId !== body.sessionId) return send(response,409,{error:'Another screen session is active. Stop it in Glove first.'});
       if (this.state.sessionId === body.sessionId) return send(response,409,{error:'This screen session already has an offer.'});
       this.answerValue = null;
@@ -156,29 +180,39 @@ export class ViewService {
       this.changed();
       return send(response,200,{accepted:true,sessionId:body.sessionId});
     }
-    if (body.sessionId !== this.state.sessionId) return send(response,410,{error:'This screen session already ended.'});
+    // A stop can arrive while the phone's offer is still in transit. Retire
+    // that ID so the delayed offer cannot take over the active slot.
+    if (body.sessionId !== this.state.sessionId) {
+      this.retireSession(body.sessionId);
+      return send(response,410,{error:'This screen session already ended.'});
+    }
     this.clearSession();
     return send(response,200,{stopped:true});
   }
-  async answer({sessionId,sdp}) {
+  async answer({sessionId,sdp} = {}) {
     this.expireSession();
-    if (!this.state.running || sessionId !== this.state.sessionId) throw new Error('The screen session is no longer active.');
+    if (this.stopPromise || !this.state.running || !sessionIs(sessionId) || sessionId !== this.state.sessionId) throw new Error('The screen session is no longer active.');
     const text = typeof sdp === 'string' ? sdp : sdp?.sdp;
     if (!sdpIs(text) || (typeof sdp === 'object' && sdp?.type !== 'answer')) throw new Error('Invalid WebRTC answer.');
+    if (this.answerValue) {
+      if (this.answerValue.sdp === text) return this.snapshot();
+      throw new Error('This screen session already has an answer.');
+    }
     this.answerValue = {type:'answer',sdp:text};
     this.state.status = 'connecting';
     this.changed();
     return this.snapshot();
   }
-  setConnected({sessionId,connected}) {
+  setConnected({sessionId,connected} = {}) {
     this.expireSession();
-    if (sessionId !== this.state.sessionId) return this.snapshot();
+    if (this.stopPromise || !sessionIs(sessionId) || sessionId !== this.state.sessionId || (connected === true && !this.answerValue)) return this.snapshot();
     this.state.connected = connected === true;
     this.state.status = this.state.connected ? 'streaming' : (this.answerValue ? 'connecting' : 'offer');
     this.changed();
     return this.snapshot();
   }
   clearSession() {
+    if (this.state.sessionId) this.retireSession(this.state.sessionId);
     clearTimeout(this.leaseTimer);
     this.leaseTimer = null;
     this.sessionLastSeen = 0;
@@ -187,15 +221,21 @@ export class ViewService {
     this.changed();
     return this.snapshot();
   }
+  retireSession(id) {
+    this.retiredSessions.add(id);
+    if (this.retiredSessions.size > MAX_RETIRED_SESSIONS) {
+      this.retiredSessions.delete(this.retiredSessions.values().next().value);
+    }
+  }
   refreshLease() {
     clearTimeout(this.leaseTimer);
-    this.sessionLastSeen = Date.now();
+    this.sessionLastSeen = performance.now();
     this.leaseTimer = setTimeout(()=>this.expireSession(),this.leaseMs);
     this.leaseTimer.unref?.();
   }
   expireSession() {
     if (!this.state.sessionId) return false;
-    const remaining = this.sessionLastSeen + this.leaseMs - Date.now();
+    const remaining = this.sessionLastSeen + this.leaseMs - performance.now();
     if (remaining <= 0) {this.clearSession();return true;}
     // Timers can fire slightly early. Keep a deadline rather than leaving a
     // session live forever when that happens.
@@ -205,20 +245,24 @@ export class ViewService {
     return false;
   }
   async stop() {
+    if (this.stopPromise) return this.stopPromise;
+    this.stopPromise = Promise.resolve().then(() => this.stopServers());
+    try {return await this.stopPromise;} finally {this.stopPromise = null;}
+  }
+  async stopServers() {
     if (this.startPromise) await this.startPromise.catch(()=>{});
     clearTimeout(this.leaseTimer);
     this.leaseTimer = null;
     this.sessionLastSeen = 0;
+    this.state = {...this.state,running:false,port:null,setupPort:null,urls:[],setupUrls:[],offer:null,sessionId:null,connected:false,status:'stopped'};
+    this.screenToken = null;
+    this.setupToken = null;
+    this.profile = null;
+    this.answerValue = null;
+    this.retiredSessions.clear();
     await Promise.all([close(this.secureServer),close(this.setupServer)]);
-    // An already accepted request may have renewed the lease while sockets
-    // were closing. Do not leave that timer alive after shutdown.
-    clearTimeout(this.leaseTimer);
-    this.leaseTimer = null;
-    this.sessionLastSeen = 0;
     this.secureServer = null;
     this.setupServer = null;
-    this.answerValue = null;
-    this.state = {...this.state,running:false,port:null,setupPort:null,urls:[],setupUrls:[],offer:null,sessionId:null,connected:false,status:'stopped'};
     this.changed();
     return this.snapshot();
   }

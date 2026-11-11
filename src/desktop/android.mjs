@@ -31,17 +31,25 @@ export function parseMdnsServices(output) {
   });
 }
 const QR_CONNECT_HELP = 'Phone paired, but its wireless connection was not established. Use Connect with the IP address and port from the main Wireless debugging screen, not the pairing port. Check that both devices use the same Wi-Fi.';
-const QR_MDNS_HELP = 'ADB network discovery is unavailable. Select a current scrcpy tools folder in Settings. Allow adb.exe on your private Wi-Fi network, or use the pairing-code and IP address connection options.';
+const QR_MDNS_HELP = 'ADB network discovery is unavailable. Select a current scrcpy tools folder in Developer. Allow adb.exe on your private Wi-Fi network, or use the pairing-code and IP address connection options.';
+const TOOLS_HELP = 'Choose an extracted scrcpy tools folder in Developer. It must contain adb.exe and scrcpy.exe.';
+const TOOLS_CHANGED = 'The Android tools folder changed. Retry with the selected tools.';
+const MIRROR_CANCELLED = 'Opening the Android screen was cancelled.';
 const qrState = (status = 'idle', error = '') => ({ active: false, value: '', expiresAt: null, status, ...(error ? { error } : {}) });
 const transportGuid = serial => serial.replace(/\._adb-tls-connect\._tcp(?:\.local)?\.?$/, '');
 
 export class AndroidService {
-  constructor({ getFolder, onChange = () => {}, qrPollMs = 1500, qrTimeoutMs = 120000 }) {
+  constructor({ getFolder, onChange = () => {}, qrPollMs = 1500, qrTimeoutMs = 120000, spawnMirror = spawn }) {
     if (!Number.isFinite(qrPollMs) || qrPollMs < 5 || !Number.isFinite(qrTimeoutMs) || qrTimeoutMs < 20) throw new Error('Invalid QR polling interval or timeout.');
     this.getFolder = getFolder;
     this.onChange = onChange;
     this.devices = [];
+    this.deviceRead = 0;
+    this.devicePublished = 0;
+    this.toolsGeneration = 0;
     this.mirror = null;
+    this.mirrorStart = null;
+    this.spawnMirror = spawnMirror;
     this.lastError = '';
     this.qr = qrState();
     this.qrPollMs = qrPollMs;
@@ -51,32 +59,50 @@ export class AndroidService {
     this.qrExpiryTimer = null;
     this.qrController = null;
   }
-  async ready() {
-    const folder = this.getFolder();
+  async ready(folder = this.getFolder()) {
     if (!folder) return false;
     return Promise.all(['adb.exe', 'scrcpy.exe'].map(async name => (await stat(join(folder, name)).catch(() => null))?.isFile() || false)).then(flags => flags.every(Boolean));
   }
-  async run(args, { signal } = {}) {
-    if (!await this.ready()) throw new Error('Choose an extracted scrcpy tools folder in Settings. It must contain adb.exe and scrcpy.exe.');
-    const { stdout, stderr } = await exec(join(this.getFolder(), 'adb.exe'), args, { cwd: this.getFolder(), shell: false, windowsHide: true, timeout: 25000, maxBuffer: 1024 * 1024, signal });
+  async run(args, { signal, folder = this.getFolder() } = {}) {
+    const generation = this.toolsGeneration;
+    if (!await this.ready(folder)) throw new Error(TOOLS_HELP);
+    signal?.throwIfAborted();
+    if (generation !== this.toolsGeneration || folder !== this.getFolder()) throw new Error(TOOLS_CHANGED);
+    const { stdout, stderr } = await exec(join(folder, 'adb.exe'), args, { cwd: folder, shell: false, windowsHide: true, timeout: 25000, maxBuffer: 1024 * 1024, signal });
+    if (generation !== this.toolsGeneration || folder !== this.getFolder()) throw new Error(TOOLS_CHANGED);
     return `${stdout}\n${stderr}`.trim();
   }
-  async refresh() {
-    this.devices = parseDevices(await this.run(['devices', '-l']));
-    this.onChange();
+  async refresh({ signal, folder = this.getFolder() } = {}) {
+    const generation = this.toolsGeneration;
+    const read = ++this.deviceRead;
+    const devices = parseDevices(await this.run(['devices', '-l'], { signal, folder }));
+    signal?.throwIfAborted();
+    if (generation !== this.toolsGeneration || folder !== this.getFolder()) throw new Error(TOOLS_CHANGED);
+    if (read > this.devicePublished) {
+      this.devicePublished = read;
+      this.devices = devices;
+      this.onChange();
+    }
+    // A concurrent read may already have published a newer device list.
     return this.devices;
   }
   async pair(address, code) {
     const target = endpoint(address);
     if (typeof code !== 'string' || !/^\d{6}$/.test(code)) throw new Error('Enter the six-digit pairing code shown on the phone.');
-    const result = await this.run(['pair', target, code]);
-    if (!/successfully paired/i.test(result)) throw new Error(result.slice(0, 700) || 'Pairing failed. Check the pairing address and code.');
+    let result;
+    try { result = await this.run(['pair', target, code]); }
+    catch (error) {
+      if ([TOOLS_HELP, TOOLS_CHANGED].includes(error.message)) throw error;
+      throw new Error('Pairing failed. Check the pairing address and code.');
+    }
+    if (!/(?:^|\n)Successfully paired to /i.test(result)) throw new Error('Pairing failed. Check the pairing address and code.');
     return 'Phone paired. Now use the IP address and port from the main Wireless debugging screen to connect.';
   }
   async connect(address) {
-    const result = await this.run(['connect', endpoint(address)]);
+    const folder = this.getFolder();
+    const result = await this.run(['connect', endpoint(address)], { folder });
     if (!/(?:^|\n)(?:already )?connected to /i.test(result)) throw new Error(result.slice(0, 700) || 'Connection failed. Check the connection port and Wi-Fi network.');
-    await this.refresh();
+    await this.refresh({ folder });
     return result;
   }
   async startQr() {
@@ -87,9 +113,9 @@ export class AndroidService {
     this.qr = { ...qrState('preparing'), active: true };
     this.onChange();
     try {
-      if (!await this.ready()) throw new Error('Choose an extracted scrcpy tools folder in Settings. It must contain adb.exe and scrcpy.exe.');
+      if (!await this.ready(folder)) throw new Error(TOOLS_HELP);
       if (!this.qrCurrent(generation)) return this.snapshot();
-      const mdns = await this.run(['mdns', 'check'], { signal: controller.signal });
+      const mdns = await this.run(['mdns', 'check'], { signal: controller.signal, folder });
       if (!this.qrCurrent(generation)) return this.snapshot();
       if (!/mdns|discovery|openscreen|bonjour|libadbmdns/i.test(mdns) || /(?:unknown|unavailable|disabled|not available|not supported|error|failed)/i.test(mdns)) throw new Error(QR_MDNS_HELP);
       this.qrFolder = folder;
@@ -122,7 +148,7 @@ export class AndroidService {
     this.qrTimer = null;
     try {
       if (this.getFolder() !== this.qrFolder) return this.finishQr(generation, 'error', 'The tools folder changed. Generate a new QR code to use the selected tools.');
-      const options = { signal: this.qrController.signal };
+      const options = { signal: this.qrController.signal, folder: this.qrFolder };
       const output = await this.run(['mdns', 'services'], options);
       if (!this.qrCurrent(generation)) return;
       if (/(?:unknown command|mdns.*(?:unavailable|disabled|not supported)|^error:)/im.test(output)) return this.finishQr(generation, 'error', QR_MDNS_HELP);
@@ -147,7 +173,7 @@ export class AndroidService {
         // pairing. A fallback uses only that GUID's separately advertised TLS
         // connection service, never the QR pairing port or an unrelated phone.
         const connectServices = guid ? services.filter(service => service.name === guid && service.type === '_adb-tls-connect._tcp' && service.address !== pairingAddress) : [];
-        let devices = parseDevices(await this.run(['devices', '-l'], options));
+        let devices = await this.refresh(options);
         if (!this.qrCurrent(generation)) return;
         let connected = devices.some(device => device.status === 'device' && ((guid && transportGuid(device.serial) === guid) || connectServices.some(service => service.address === device.serial)));
         if (!connected) {
@@ -156,14 +182,12 @@ export class AndroidService {
             this.qrConnectAttempts.add(fallback.address);
             await this.run(['connect', fallback.address], options);
             if (!this.qrCurrent(generation)) return;
-            devices = parseDevices(await this.run(['devices', '-l'], options));
+            devices = await this.refresh(options);
             if (!this.qrCurrent(generation)) return;
             connected = devices.some(device => device.status === 'device' && ((guid && transportGuid(device.serial) === guid) || connectServices.some(service => service.address === device.serial)));
           }
         }
-        this.devices = devices;
         if (connected) return this.finishQr(generation, 'connected');
-        this.onChange();
       }
       this.scheduleQr(generation);
     } catch {
@@ -193,10 +217,30 @@ export class AndroidService {
     return this.snapshot();
   }
   async start(serial) {
-    if (this.mirror) throw new Error('A mirror is already open. Close it before starting another.');
-    await this.refresh();
-    if (typeof serial !== 'string' || !this.devices.some(d => d.serial === serial && d.status === 'device')) throw new Error('Refresh devices and select an authorized phone.');
-    const child = spawn(join(this.getFolder(), 'scrcpy.exe'), ['--serial', serial, '--window-title=Glove - Android', '--max-size=1920'], { cwd: this.getFolder(), shell: false, windowsHide: true, stdio: ['ignore', 'ignore', 'pipe'] });
+    if (this.mirror || this.mirrorStart) throw new Error('A mirror is already opening or open. Close it before starting another.');
+    if (typeof serial !== 'string') throw new Error('Refresh devices and select an authorized phone.');
+    const folder = this.getFolder();
+    const controller = new AbortController();
+    this.mirrorStart = controller;
+    try {
+      const devices = await this.refresh({ signal: controller.signal, folder });
+      controller.signal.throwIfAborted();
+      if (devices.filter(d => d.serial === serial && d.status === 'device').length !== 1) {
+        throw new Error('Refresh devices and select an authorized phone.');
+      }
+      return this.openMirror(folder, serial);
+    } catch (error) {
+      if (controller.signal.aborted) throw new Error(MIRROR_CANCELLED);
+      throw error;
+    } finally {
+      if (this.mirrorStart === controller) this.mirrorStart = null;
+    }
+  }
+  openMirror(folder, serial) {
+    const child = this.spawnMirror(join(folder, 'scrcpy.exe'), ['--serial', serial, '--window-title=Glove - Android', '--max-size=1920'], {
+      cwd: folder, shell: false, windowsHide: true, stdio: ['ignore', 'ignore', 'pipe'],
+      env: { ...process.env, ADB: join(folder, 'adb.exe') },
+    });
     this.mirror = child;
     this.lastError = '';
     let errors = '';
@@ -208,16 +252,22 @@ export class AndroidService {
       this.onChange();
     };
     child.on('error', error => finish(error.message));
-    child.on('exit', code => finish(code ? errors || `Screen mirror exited (${code}).` : ''));
+    child.on('close', code => finish(code ? errors || `Screen mirror exited (${code}).` : ''));
     this.onChange();
     return 'Opening the Android screen in a separate window.';
   }
+  toolsChanged() {
+    this.toolsGeneration++;
+    this.devices = [];
+    this.lastError = '';
+    this.stop();
+  }
   stop() {
+    this.mirrorStart?.abort();
+    this.mirrorStart = null;
     this.stopQr();
     const child = this.mirror;
-    this.mirror = null;
     child?.kill();
-    this.onChange();
   }
   snapshot() { return { devices: this.devices.map(device => ({ ...device })), mirroring: !!this.mirror, error: this.lastError, qr: { ...this.qr } }; }
 }

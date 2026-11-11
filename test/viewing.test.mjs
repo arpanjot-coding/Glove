@@ -5,6 +5,8 @@ import os from 'node:os';
 import path from 'node:path';
 import http from 'node:http';
 import https from 'node:https';
+import { connect } from 'node:net';
+import { once } from 'node:events';
 import vm from 'node:vm';
 import {X509Certificate} from 'node:crypto';
 import {ViewService} from '../src/viewing/service.mjs';
@@ -147,6 +149,47 @@ test('stop closes both listeners; restart preserves CA and rotates session URLs'
   assert.match(await fs.readFile(path.join(folder,'root-ca-key.pem'),'utf8'),/PRIVATE KEY/);
 });
 
+test('parallel stop and restart wait for the old listeners and return usable fresh links',async()=>{
+  const original = state;
+  const stopping = service.stop();
+  const restarting = service.start({host:'127.0.0.1',port:state.port,setupPort:state.setupPort});
+  const anotherStop = service.stop();
+  const [stopped, fresh] = await Promise.all([stopping,restarting,anotherStop]);
+  assert.equal(stopped.running,false);
+  assert.equal(fresh.port,original.port);
+  assert.notEqual(fresh.urls[0],original.urls[0]);
+  assert.equal((await fetchLocal(fresh.urls[0])).status,200);
+  assert.equal((await fetchLocal(fresh.setupUrls[0])).status,200);
+  assert.equal((await fetchLocal(original.urls[0])).status,404);
+  state = fresh;
+});
+
+test('stopping closes a phone socket that has not finished TLS negotiation', {timeout:3000}, async t=>{
+  const original = state;
+  const socket = connect({host:'127.0.0.1',port:state.port});
+  t.after(()=>socket.destroy());
+  await once(socket,'connect');
+  const closed = once(socket,'close');
+  await service.stop();
+  await closed;
+  state = await service.start({host:'127.0.0.1',port:original.port,setupPort:original.setupPort});
+  assert.equal((await fetchLocal(state.urls[0])).status,200);
+});
+
+test('a stopped phone cannot claim the session with a delayed offer',async()=>{
+  const cancelled = 'cancelled-offer-123456';
+  await assert.rejects(service.answer({sessionId:null,sdp:offer}), /no longer active/);
+  assert.equal(service.setConnected({sessionId:null,connected:true}).connected,false);
+  assert.equal((await post('stop',{sessionId:cancelled})).status,410);
+  assert.equal((await post('offer',{sessionId:cancelled,sdp:offer})).status,410);
+  assert.equal(service.snapshot().sessionId,null);
+
+  const next = 'fresh-phone-123456789';
+  assert.equal((await post('offer',{sessionId:next,sdp:offer})).status,200);
+  assert.equal((await post('stop',{sessionId:next})).status,200);
+  assert.equal((await post('offer',{sessionId:next,sdp:offer})).status,410);
+});
+
 test('heartbeats renew the lease; an abandoned phone expires and a new session can connect',async()=>{
   const leaseEvents = [];
   const leased = new ViewService({dataDir:folder,leaseMs:500,onChange:snapshot=>leaseEvents.push(snapshot)});
@@ -174,13 +217,13 @@ test('heartbeats renew the lease; an abandoned phone expires and a new session c
   assert.equal(leased.leaseTimer,null,'shutdown must release its timer');
 });
 
-function browserFixture({deferAnswer=false}={}) {
+function browserFixture({deferAnswer=false,deferOffer=false}={}) {
   const elements = Object.fromEntries(['status','start','stop','preview'].map(id=>[id,{disabled:true,hidden:true}]));
   const handlers = new Map();
   const timers = new Map();
   const requests = [];
   const peers = [];
-  let timerId = 0, releaseAnswer;
+  let timerId = 0, releaseAnswer, releaseOffer;
   const track = {onended:null,stopped:false,stop(){this.stopped=true;}};
   const stream = {getVideoTracks:()=>[track],getTracks:()=>[track]};
   class Peer {
@@ -199,10 +242,12 @@ function browserFixture({deferAnswer=false}={}) {
     window:{isSecureContext:true,addEventListener:(event,handler)=>handlers.set(event,handler)},
     RTCPeerConnection:Peer,
     crypto:{randomUUID:()=> 'browser-test-session-12345'},
+    AbortSignal,performance,
     setTimeout:(callback,delay)=>{const id=++timerId;timers.set(id,{callback,delay});return id;},
     clearTimeout:id=>timers.delete(id),
     fetch:async(url,options)=>{
       requests.push({url,options});
+      if (deferOffer && url.endsWith('/offer')) return new Promise(resolve=>{releaseOffer=()=>resolve(ok({accepted:true}));});
       if(url.includes('answer?')) {
         if(deferAnswer) return new Promise(resolve=>{releaseAnswer=()=>resolve(ok({answer:{type:'answer',sdp:offer}}));});
         return ok({answer:{type:'answer',sdp:offer}});
@@ -211,7 +256,7 @@ function browserFixture({deferAnswer=false}={}) {
     },
   };
   vm.runInNewContext(screenScript,context);
-  return {elements,handlers,timers,requests,peers,track,releaseAnswer:()=>releaseAnswer()};
+  return {elements,handlers,timers,requests,peers,track,releaseAnswer:()=>releaseAnswer(),releaseOffer:()=>releaseOffer()};
 }
 const flushBrowser = ()=>new Promise(resolve=>setImmediate(resolve));
 
@@ -248,4 +293,19 @@ test('an answer that arrives after page close cannot revive the closed capture',
   assert.equal(browser.timers.size,0);
   assert.equal(browser.elements.preview.srcObject,null);
   assert.equal(browser.elements.status.textContent,'Screen sharing stopped.');
+});
+
+test('stopping during the offer keeps the phone stopped after the response arrives',async()=>{
+  const browser = browserFixture({deferOffer:true});
+  const starting = browser.elements.start.onclick();
+  await flushBrowser();
+  assert.ok(browser.requests.some(request=>request.url.endsWith('/offer')));
+  browser.elements.stop.onclick();
+  browser.releaseOffer();
+  await starting;
+  assert.ok(browser.requests.some(request=>request.url.endsWith('/stop')));
+  assert.ok(!browser.requests.some(request=>request.url.includes('answer?')));
+  assert.equal(browser.elements.status.textContent,'Screen sharing stopped.');
+  assert.equal(browser.track.stopped,true);
+  assert.equal(browser.elements.start.disabled,false);
 });

@@ -34,36 +34,48 @@ export const screenScript = `
   const stop = document.getElementById('stop');
   const preview = document.getElementById('preview');
   const base = location.pathname.replace(/\\/?$/, '/');
-  let peer, stream, sessionId, stopped = true, timeout, generation = 0;
+  let peer, stream, sessionId, stopped = true, timeout, finishIce, generation = 0, canStart = false;
+  let stopRequest = Promise.resolve();
   const show = text => status.textContent = text;
-  const request = async (route, body) => {
-    const response = await fetch(base + route, body === undefined ? {cache:'no-store'} : {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const request = async (route, body, keepalive = false) => {
+    const options = {cache:'no-store', signal:AbortSignal.timeout(8000)};
+    if (body !== undefined) Object.assign(options, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),keepalive});
+    const response = await fetch(base + route, options);
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
       throw new Error(error.error || 'Connection failed (' + response.status + ').');
     }
     return response.json();
   };
-  function end(message, notify = true) {
+  function end(message, keepalive = false) {
     generation++;
     stopped = true;
     clearTimeout(timeout);
-    if (notify && sessionId) request('stop', {sessionId}).catch(() => {});
+    if (sessionId) stopRequest = request('stop', {sessionId}, keepalive).catch(() => {});
+    finishIce?.();
     const oldStream = stream;
     stream = undefined;
     peer?.close(); peer = undefined;
     oldStream?.getTracks().forEach(track => {track.onended = null; track.stop();});
     preview.srcObject = null; preview.hidden = true;
-    stop.disabled = true; start.disabled = false;
+    stop.disabled = true; start.disabled = !canStart;
     sessionId = undefined;
     show(message);
   }
   function waitForIce(pc) {
     if (pc.iceGatheringState === 'complete') return Promise.resolve();
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => {pc.removeEventListener('icegatheringstatechange', change); reject(new Error('Local network discovery timed out. Please restart sharing.'));}, 15000);
-      function change() {if (pc.iceGatheringState === 'complete') {clearTimeout(timer);pc.removeEventListener('icegatheringstatechange', change);resolve();}}
+      const timer = setTimeout(() => finish(new Error('Local network discovery timed out. Please restart sharing.')), 15000);
+      function finish(error) {
+        clearTimeout(timer);
+        pc.removeEventListener('icegatheringstatechange', change);
+        finishIce = undefined;
+        if (error) reject(error); else resolve();
+      }
+      function change() {if (pc.iceGatheringState === 'complete') finish();}
+      finishIce = finish;
       pc.addEventListener('icegatheringstatechange', change);
+      change();
     });
   }
   async function poll(id, pc, startedAt) {
@@ -76,7 +88,7 @@ export const screenScript = `
         if (stopped || sessionId !== id || peer !== pc) return;
         show('Connecting live video over your local network…');
       }
-      if (!pc.remoteDescription && Date.now() - startedAt > 60000) throw new Error('The desktop did not answer. Open Glove and try again.');
+      if (!pc.remoteDescription && performance.now() - startedAt > 60000) throw new Error('The desktop did not answer. Open Glove and try again.');
       // Polling remains active after the answer as the session heartbeat. A
       // closed tab or lost network then releases the desktop session lease.
       timeout = setTimeout(() => poll(id, pc, startedAt), pc.remoteDescription ? 2000 : 700);
@@ -104,25 +116,25 @@ export const screenScript = `
         if (pc.connectionState === 'disconnected') show('Video connection interrupted. Waiting for the local network…');
       };
       show('Preparing local video connection…');
-      await pc.setLocalDescription(await pc.createOffer());
+      const offer = await pc.createOffer();
+      if (stopped || run !== generation) return;
+      await pc.setLocalDescription(offer);
+      if (stopped || run !== generation) return;
       await waitForIce(pc);
-      if (stopped || sessionId !== id) return;
+      await stopRequest;
+      if (stopped || run !== generation) return;
       await request('offer', {sessionId:id,sdp:pc.localDescription.sdp});
+      if (stopped || run !== generation) return;
       show('Waiting for the Glove desktop app to receive your screen…');
-      poll(id, pc, Date.now());
+      poll(id, pc, performance.now());
     } catch (error) {
       if (!stopped && run === generation) end(error.name === 'NotAllowedError' ? 'Screen sharing was declined. Tap Start to try again.' : (error.message || 'Screen sharing failed.'));
     }
   };
   stop.onclick = () => end('Screen sharing stopped.');
   window.addEventListener('pagehide', () => {
-    const closingSession = sessionId;
-    end('Screen sharing stopped.', false);
-    if (closingSession) {
-      // keepalive permits this small same-origin JSON request during page exit.
-      // The server lease also handles process termination or network failure.
-      fetch(base + 'stop', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:closingSession}),keepalive:true}).catch(() => {});
-    }
+    // The lease also handles process termination or a failed keepalive.
+    end('Screen sharing stopped.', true);
   });
   if (!window.isSecureContext) {
     show('A trusted HTTPS connection is required. Install and fully trust this computer’s Glove certificate, then reopen the secure page.');
@@ -131,6 +143,7 @@ export const screenScript = `
   } else if (typeof RTCPeerConnection !== 'function') {
     show('This browser does not support the video connection. Use Safari on iOS 27 or later.');
   } else {
+    canStart = true;
     start.disabled = false;
     show('Ready. Tap Start screen sharing to choose what to share.');
   }

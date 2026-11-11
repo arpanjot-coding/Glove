@@ -1,42 +1,43 @@
-GLOVE FOR WINDOWS — 0.1.0
+GLOVE FOR WINDOWS
 
-Extract the complete Windows archive into a folder. Open Glove.exe.
-Keep all its DLLs, resources and license notices together.
-This is an unsigned development build for Windows x64.
-The Windows app opened on the development PC. This preview still needs
-physical phone testing.
+Run Glove-Setup-x64.exe to install Glove for your Windows account. Open Glove
+from Start. If you use the portable build, keep the complete folder together
+and open Glove.exe. This Windows x64 preview is unsigned.
 
-ANDROID
-In Settings, open the official tools guide, download/extract scrcpy, and choose
-its folder containing adb.exe and scrcpy.exe. Follow Glove's guided setup.
-Android 11+ supports Wi-Fi pairing without USB, but Wireless debugging and
-Developer options are required. Scan the Android QR using the QR scanner in
-Wireless debugging, not your ordinary camera. mDNS must be allowed on the LAN.
-Use the manual fallback if your network blocks discovery.
+TRANSFER FILES
+In Personal > File sharing, choose Start file sharing. Scan the QR with your phone's
+ordinary camera, then open the link in the phone browser. You can add files
+from Windows or upload from the phone. Received files go to Downloads\Glove
+unless you choose a different receive folder.
 
-DEVELOPER TESTING
-In Settings > Developer tools, select an authorized Android device and copy
-the configuration for your local MCP client. It requires Node.js 24 or newer.
-See MCP.md and resources\glove-mobile-qa\SKILL.md for the test workflow.
+The browser session uses HTTP on your local network. Use trusted private Wi-Fi
+and stop sharing when finished. Received files stay on your PC.
+
+ANDROID NOTIFICATIONS
+In Personal > Notifications, choose Share Android installer. Use the File
+sharing QR to download Glove-Companion.apk to the phone and install it.
+Choose Continue to pairing, then Pair Android. Scan the new QR from inside
+Glove Companion, check the matching six-digit code, and approve on Windows.
+Grant notification access in Android Settings and choose which apps can share.
+Developer options are unnecessary for this connection.
+
+Android may block notification access for a manually installed preview. If
+the system offers Allow restricted settings in the trusted app's App info
+menu, use that option before granting notification access. The preview inbox
+shows recent active notifications from selected apps and supports replies when
+the source notification offers one. Pause or forget the phone at any time.
+
+DEVELOPER
+Use Developer > Android screen for scrcpy and Wireless debugging. The Android
+11+ setup guide covers Developer options, the Wireless debugging QR scanner,
+and manual pairing. Use Developer > MCP for optional local Android testing.
+The MCP client needs Node.js 24+. See MCP.md for setup.
 
 IPHONE
-Screen viewing targets Safari on iOS 27+. Start iPhone setup, scan its QR and
-follow the certificate instructions. Compare the actual downloaded certificate's
-SHA-256 fingerprint with the PC before installing or trusting it. Cancel if you
-cannot verify it. This build views screen video only, without remote touch/audio.
-Physical iPhone compatibility still needs testing.
+Use File sharing from the iPhone browser. The separate screen-viewing preview
+targets iOS 27+ and needs a compatible Safari screen picker. Follow Glove's
+certificate verification steps before trusting the downloaded profile.
+Physical iPhone screen playback still needs testing.
 
-FILES
-Start file sharing and scan its QR with either phone's normal camera. Add PC
-files or upload from the phone page. Received files default to Downloads\Glove.
-Use trusted private Wi-Fi: file transfers use unencrypted HTTP. Stop sharing
-when finished. Links are session-specific. Received files remain on your PC.
-
-LICENSE
-Original Glove application code: MIT, Copyright 2026 Glove contributors.
-Third-party dependencies keep their own licenses. Read LICENSE.glove.txt,
-THIRD-PARTY-NOTICES.txt and Electron/Chromium notices in this folder.
-
-Both devices must use the same private network. Guest Wi-Fi, VPNs, Windows
-Firewall and disabled mDNS can block connections. See docs/VERIFICATION.md in
-the source for Android emulator results and remaining phone checks.
+Glove's original code uses MIT. See LICENSE.glove.txt and THIRD-PARTY-NOTICES.txt
+in the installed or portable app folder.

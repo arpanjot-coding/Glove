@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 const { contextBridge, ipcRenderer } = require('electron');
 const actions = new Set(['windowMinimize', 'windowToggleMaximize', 'windowClose', 'state', 'chooseTools', 'chooseReceiveFolder', 'openReceiveFolder', 'openToolGuide', 'refreshAndroid', 'pairAndroid', 'connectAndroid', 'startAndroidQr', 'stopAndroidQr', 'mirrorAndroid', 'stopAndroid', 'startSharing', 'stopSharing', 'addFiles', 'removeFile', 'startViewing', 'stopViewing', 'answerViewing', 'viewingConnected', 'copyText', 'copyMcpConfig']);
+for (const action of ['startPersonalPairing', 'stopPersonalPairing', 'approvePersonalPairing', 'denyPersonalPairing', 'setPersonalPaused', 'forgetPersonalDevice', 'sendPersonalReply', 'shareCompanionApk']) actions.add(action);
 contextBridge.exposeInMainWorld('glove', {
   call: async (action, data) => {
     if (!actions.has(action)) throw new Error('Unknown action.');

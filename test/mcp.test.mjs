@@ -6,6 +6,7 @@ import { resolve } from 'node:path';
 import { createInterface } from 'node:readline';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { createAndroidTools } from '../src/mcp/android-tools.mjs';
 
 const fixture = fileURLToPath(new URL('./mcp-fixture.mjs', import.meta.url));
 const cli = fileURLToPath(new URL('../src/mcp/main.mjs', import.meta.url));
@@ -111,6 +112,32 @@ test('MCP rejects overlapping operations and remains responsive during cancellat
   client.send({ method: 'notifications/cancelled', params: { requestId: screenshot.id } });
   assert.deepEqual((await client.request('ping').result).result, {});
   assert.equal((await client.call('android_list_devices')).result.structuredContent.devices.length, 1);
+});
+
+test('a reconnected Android transport needs a new screenshot before receiving a tap', { timeout: 5000 }, async t => {
+  const client = connectFixture(t, 'reconnect');
+  await client.initialize();
+  assert.equal((await client.call('android_screenshot')).result.content[0].type, 'image');
+  const stale = await client.call('android_tap', { x: 0, y: 0 });
+  assert.match(stale.result.content[0].text, /connection or screenshot changed/);
+  assert.match((await client.call('android_tap', { x: 0, y: 0 })).result.content[0].text, /fresh screenshot/);
+  await client.call('android_screenshot');
+  assert.match((await client.call('android_tap', { x: 0, y: 0 })).result.content[0].text, /^Tap sent/);
+});
+
+test('a screenshot cancelled before its runner settles cannot authorize a tap', async () => {
+  const controller = new AbortController();
+  const tools = createAndroidTools({
+    device: 'emulator-5554',
+    allowInput: true,
+    async run(args) {
+      if (args[0] === 'devices') return Buffer.from('emulator-5554 device transport_id:8');
+      controller.abort();
+      return Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a5eUAAAAASUVORK5CYII=', 'base64');
+    }
+  });
+  await assert.rejects(tools.get('android_screenshot').call({}, controller.signal), { name: 'AbortError' });
+  await assert.rejects(tools.get('android_tap').call({ x: 0, y: 0 }), /fresh screenshot/);
 });
 
 test('MCP CLI rejects an invalid ADB path or port before producing protocol output', { timeout: 5000 }, async () => {

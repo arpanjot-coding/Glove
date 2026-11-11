@@ -41,6 +41,20 @@ function connectionType(serial) {
   return 'usb';
 }
 
+function authorizedDevices(output, selected) {
+  return output.toString('utf8').split(/\r?\n/).flatMap(line => {
+    const [serial, status, ...details] = line.trim().split(/\s+/);
+    if (status !== 'device' || !validSerial(serial) || (selected && serial !== selected)) return [];
+    const model = details.find(detail => detail.startsWith('model:'))?.slice(6).replaceAll('_', ' ') ?? '';
+    const id = details.find(detail => /^transport_id:[1-9][0-9]{0,19}$/.test(detail))?.slice(13);
+    return [{
+      serial, id,
+      model: model.replace(/[^\p{L}\p{N} ._-]/gu, '').slice(0, 100) || 'Android',
+      connection: connectionType(serial)
+    }];
+  });
+}
+
 function dimensions(png) {
   if (!Buffer.isBuffer(png) || png.length < 33 || png.length > MAX_SCREEN_BYTES ||
       !png.subarray(0, 8).equals(PNG_SIGNATURE) || png.readUInt32BE(8) !== 13 ||
@@ -86,55 +100,63 @@ export function createAndroidTools({ run, device, allowInput = false }) {
     tools.set(name, { definition: { name, description, inputSchema, annotations }, call });
   }
 
+  async function selectedTransport(signal) {
+    const output = await run(['devices', '-l'], { signal });
+    signal?.throwIfAborted();
+    const devices = authorizedDevices(output, device);
+    if (devices.length !== 1 || !devices[0].id) {
+      throw new Error('Reconnect the selected Android device. Glove needs a unique transport ID from current platform-tools.');
+    }
+    return devices[0].id;
+  }
+
   add('android_list_devices', 'List authorized Android devices on the local ADB server. If a device is configured, list only that device.', emptySchema, readOnly, async (_args, signal) => {
     const output = await run(['devices', '-l'], { signal });
-    const devices = [];
-    for (const line of output.toString('utf8').split(/\r?\n/)) {
-      const [serial, status, ...details] = line.trim().split(/\s+/);
-      if (status !== 'device' || !validSerial(serial) || (device && serial !== device)) continue;
-      const model = details.find(detail => detail.startsWith('model:'))?.slice(6).replaceAll('_', ' ') ?? '';
-      devices.push({
-        serial,
-        model: model.replace(/[^\p{L}\p{N} ._-]/gu, '').slice(0, 100) || 'Android',
-        connection: connectionType(serial)
-      });
-    }
+    const devices = authorizedDevices(output, device).map(({ serial, model, connection }) => ({ serial, model, connection }));
     return { content: [{ type: 'text', text: JSON.stringify({ devices }) }], structuredContent: { devices } };
   });
 
   if (device) {
     add('android_screenshot', 'Capture the configured Android screen as a PNG. Use only on a device whose screen may be shared with this client.', emptySchema, readOnly, async (_args, signal) => {
       lastScreen = undefined;
-      const png = await run(['-s', device, 'exec-out', 'screencap', '-p'], { signal, maxBuffer: MAX_SCREEN_BYTES });
+      const transport = await selectedTransport(signal);
+      const png = await run(['-t', transport, 'exec-out', 'screencap', '-p'], { signal, maxBuffer: MAX_SCREEN_BYTES });
+      signal?.throwIfAborted();
       const size = dimensions(png);
-      if (allowInput) lastScreen = { ...size, capturedAt: performance.now() };
+      if (allowInput) lastScreen = { ...size, transport, capturedAt: performance.now() };
       return { content: [{ type: 'image', mimeType: 'image/png', data: png.toString('base64') }] };
     });
   }
 
   if (allowInput) {
-    function useScreenshot(points) {
+    async function useScreenshot(points, signal) {
       if (!lastScreen || performance.now() - lastScreen.capturedAt > 30000) {
         throw new Error('Capture a fresh screenshot before using coordinates.');
       }
       if (points.some(([x, y]) => x >= lastScreen.width || y >= lastScreen.height)) {
         throw new Error('The coordinates must be inside the latest screenshot.');
       }
+      const screen = lastScreen;
       lastScreen = undefined;
+      if (await selectedTransport(signal) !== screen.transport || performance.now() - screen.capturedAt > 30000) {
+        throw new Error('The device connection or screenshot changed. Capture a fresh screenshot before sending input.');
+      }
+      return screen.transport;
     }
     add('android_tap', 'Tap a coordinate on the configured Android device. First capture a screenshot, then choose a pixel in that screenshot. A tap can change app state.', tapSchema, inputAction, async ({ x, y }, signal) => {
-      useScreenshot([[x, y]]);
-      await run(['-s', device, 'shell', 'input', 'tap', String(x), String(y)], { signal });
+      const transport = await useScreenshot([[x, y]], signal);
+      await run(['-t', transport, 'shell', 'input', 'tap', String(x), String(y)], { signal });
       return { content: [{ type: 'text', text: 'Tap sent. Capture a screenshot to check the result.' }] };
     });
     add('android_swipe', 'Swipe between two pixels on the configured Android device. First capture a screenshot, then choose both points in that screenshot. A swipe can change app state.', swipeSchema, inputAction, async ({ x1, y1, x2, y2, durationMs = 300 }, signal) => {
-      useScreenshot([[x1, y1], [x2, y2]]);
-      await run(['-s', device, 'shell', 'input', 'swipe', ...[x1, y1, x2, y2, durationMs].map(String)], { signal });
+      const transport = await useScreenshot([[x1, y1], [x2, y2]], signal);
+      await run(['-t', transport, 'shell', 'input', 'swipe', ...[x1, y1, x2, y2, durationMs].map(String)], { signal });
       return { content: [{ type: 'text', text: 'Swipe sent. Capture a screenshot to check the result.' }] };
     });
     add('android_back', 'Press Android Back once on the configured device. This may navigate away from the current screen.', emptySchema, inputAction, async (_args, signal) => {
       lastScreen = undefined;
-      await run(['-s', device, 'shell', 'input', 'keyevent', '4'], { signal });
+      const transport = await selectedTransport(signal);
+      await run(['-t', transport, 'shell', 'input', 'keyevent', '4'], { signal });
       return { content: [{ type: 'text', text: 'Back sent. Capture a screenshot to check the result.' }] };
     });
   }

@@ -2,6 +2,13 @@
 
 This is the Windows x64 development preview. The final package opened on the Windows test PC using its normal executable. The app was left open for a physical phone test.
 
+## Personal notifications and file sharing
+
+- The Android 16 emulator installed the companion APK, paired with the Windows service over certificate-pinned HTTPS, and matched the same six-digit approval code on both sides. The test entered the pairing payload through the companion's manual fallback. The emulator camera opened. Its injected QR image did not decode, so scanning a Windows QR with a physical Android camera still needs a handset test.
+- Before Android granted notification access, Windows showed no previews. With only the synthetic test app selected, Windows received an informational notification and a notification offering a text reply. The secret notification stayed on Android.
+- Glove sent a reply through the original Android notification's free-form action. The test app received the exact text once and Glove reported that the reply was submitted. The test also checked reconnection after an APK upgrade, pause and resume, notification permission revocation, and forgetting the pairing.
+- In the native Windows app, the Android installer sharing session listed only the bundled APK. Continuing to pairing closed that session. The ordinary file sharing page generated its own camera QR. Developer screen control and MCP setup appeared in a separate workspace.
+
 ## Android and MCP
 
 - Glove discovered an authorized Android 16 (API 36) emulator through the real Android tools. The run caught a device-list parsing bug. Current ADB aligns its columns with spaces, so Glove now accepts both spaces and tabs.
@@ -19,7 +26,7 @@ This is the Windows x64 development preview. The final package opened on the Win
 
 ## Automated checks
 
-`npm test` passes 34 tests. The suite covers Android connection state, real loopback file transfers, HTTPS and iPhone signaling, and the MCP protocol. The production UI build and Windows packaging pass. The archive contains only the certificate provider as an external desktop dependency. The MCP server and QA skill ship as standalone resources.
+`npm test` passes 54 tests. Regression cases cover overlapping pairing and mirror actions, phone-side revocation, stale ADB transports, partial transfer retry, and late iPhone signaling. The production UI and Windows installer build. The archive contains only the certificate provider as an external desktop dependency. The MCP server and QA skill ship as standalone resources.
 
 The iPhone tests verify certificate setup, signaling, and session expiry. End-to-end Safari screen sharing and phone browser transfers still need physical device tests. The compatible model families on the website describe eligibility based on device requirements.
 

@@ -6,7 +6,7 @@ Use Node.js 24 or newer. From a source checkout, the entry point is `src/mcp/mai
 
 ## Copy configuration from Glove
 
-1. In Glove, open **Settings → Developer tools** and select **Refresh devices**.
+1. In Glove, open **Developer → MCP testing** and select **Refresh devices**.
 2. Choose the connected Android device and either **Codex · TOML** or **Claude Code · JSON**.
 3. Select **Copy MCP configuration**. Merge the copied server entry into `~/.codex/config.toml` for Codex or your project's `.mcp.json` for Claude Code. Start a new client session.
 

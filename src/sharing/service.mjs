@@ -48,6 +48,11 @@ function publicItem(item) {
   return { id: item.id, name: item.name, size: item.size, direction: item.direction, createdAt: item.createdAt };
 }
 
+function sameFile(item, info) {
+  return info.dev === item.dev && info.ino === item.ino && info.size === item.size &&
+    info.mtimeMs === item.mtimeMs && info.ctimeMs === item.ctimeMs;
+}
+
 function connectionUrls(host, port, token) {
   let addresses;
   if (host === '0.0.0.0' || host === '::') {
@@ -64,6 +69,7 @@ function connectionUrls(host, port, token) {
 export class ShareService {
   #receiveDir;
   #onChange;
+  #allowUploads;
   #server = null;
   #token = null;
   #port = null;
@@ -80,11 +86,12 @@ export class ShareService {
   #stopPromise = null;
   #changingReceiveDir = false;
 
-  constructor({ receiveDir, onChange } = {}) {
+  constructor({ receiveDir, onChange, allowUploads = true } = {}) {
     if (typeof receiveDir !== 'string' || !receiveDir.trim()) throw new TypeError('receiveDir is required.');
     if (onChange !== undefined && typeof onChange !== 'function') throw new TypeError('onChange must be a function.');
     this.#receiveDir = path.resolve(receiveDir);
     this.#onChange = onChange;
+    this.#allowUploads = allowUploads;
   }
 
   snapshot() {
@@ -219,12 +226,15 @@ export class ShareService {
         if (!Number.isSafeInteger(info.size)) throw new Error('This file is too large to share.');
         const key = process.platform === 'win32' ? canonical.toLowerCase() : canonical;
         additions.push({ id: randomBytes(16).toString('hex'), name: filename(path.basename(canonical)), size: info.size,
-          direction: 'to-phone', createdAt: new Date().toISOString(), path: canonical, key, dev: info.dev, ino: info.ino });
+          direction: 'to-phone', createdAt: new Date().toISOString(), path: canonical, key,
+          dev: info.dev, ino: info.ino, mtimeMs: info.mtimeMs, ctimeMs: info.ctimeMs });
       }
-      const existing = new Set([...this.#items.values()].map(item => item.key));
+      const existing = new Map([...this.#items.values()].map(item => [item.key, item]));
       for (const item of additions) {
-        if (existing.has(item.key)) continue;
-        existing.add(item.key);
+        const previous = existing.get(item.key);
+        if (previous && sameFile(previous, item)) continue;
+        if (previous) this.#items.delete(previous.id);
+        existing.set(item.key, item);
         this.#items.set(item.id, item);
       }
     } finally { this.#pendingAdds -= paths.length; }
@@ -295,7 +305,7 @@ export class ShareService {
     if ((req.method === 'GET' || req.method === 'HEAD') && route === '') {
       const nonce = randomBytes(18).toString('base64');
       res.setHeader('Content-Security-Policy', `default-src 'none'; script-src 'nonce-${nonce}'; style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'`);
-      const body = Buffer.from(phonePage(nonce));
+      const body = Buffer.from(phonePage(nonce, this.#allowUploads));
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Content-Length': body.length });
       res.end(req.method === 'HEAD' ? undefined : body);
     } else if (req.method === 'GET' && route === 'api/items') {
@@ -303,6 +313,7 @@ export class ShareService {
     } else if ((req.method === 'GET' || req.method === 'HEAD') && /^files\/[a-f0-9]{32}$/.test(route)) {
       await this.#download(req, res, route.slice(6));
     } else if (req.method === 'POST' && route === 'api/upload') {
+      if (!this.#allowUploads) throw new HttpError(405, 'This session only shares the Glove Android installer.');
       await this.#upload(req, res, url, session);
     } else {
       throw new HttpError(req.method === 'OPTIONS' ? 405 : 404, 'This resource is not available.');
@@ -316,13 +327,14 @@ export class ShareService {
     try {
       handle = await open(item.path, 'r');
       const info = await handle.stat();
-      if (!info.isFile() || info.dev !== item.dev || info.ino !== item.ino || info.size !== item.size) {
+      if (!info.isFile() || !sameFile(item, info)) {
         throw new HttpError(409, 'This file changed. Add it again from the computer.');
       }
+      if (!this.#running || this.#items.get(id) !== item) throw new HttpError(404, 'This file is no longer shared.');
       res.writeHead(200, { 'Content-Type': 'application/octet-stream', 'Content-Length': info.size,
         'Content-Disposition': disposition(item.name) });
-      if (req.method === 'HEAD') { res.end(); return; }
-      await pipeline(handle.createReadStream(), res);
+      if (req.method === 'HEAD' || info.size === 0) { res.end(); return; }
+      await pipeline(handle.createReadStream({ end: info.size - 1 }), res);
     } catch (error) {
       if (error instanceof HttpError || res.headersSent) throw error;
       throw new HttpError(404, 'This file is no longer available.');
@@ -379,7 +391,7 @@ export class ShareService {
       const info = await stat(reserved.path);
       const item = { id: randomBytes(16).toString('hex'), name: reserved.name, size: total, direction: 'from-phone',
         createdAt: new Date().toISOString(), path: reserved.path, key: process.platform === 'win32' ? reserved.path.toLowerCase() : reserved.path,
-        dev: info.dev, ino: info.ino };
+        dev: info.dev, ino: info.ino, mtimeMs: info.mtimeMs, ctimeMs: info.ctimeMs };
       // No await between the final session check and publishing the entry.
       if (!this.#running || !sameToken(this.#token, session)) throw new HttpError(404, 'Sharing stopped before the file was received.');
       this.#items.set(item.id, item);

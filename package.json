@@ -16,6 +16,7 @@
     "mcp": "node src/mcp/main.mjs",
     "test": "node --test test/*.test.mjs",
     "package:win": "npm run build && node scripts/package.mjs",
+    "installer:win": "npm run package:win && node scripts/installer.mjs",
     "licenses": "node scripts/licenses.mjs"
   },
   "dependencies": {
